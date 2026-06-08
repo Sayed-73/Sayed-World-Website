@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function() {
+        // Step 1: Intercept Request accesses from formdata-polyfill or node-fetch
+        try {
+          var origRequest = window.Request || (typeof globalThis !== 'undefined' ? globalThis.Request : null);
+          if (origRequest) {
+            var getRequest = function() {
+              try {
+                var stack = new Error().stack || '';
+                if (
+                  stack.indexOf('formdata-polyfill') !== -1 ||
+                  stack.indexOf('formdata') !== -1 ||
+                  stack.indexOf('node-fetch') !== -1 ||
+                  stack.indexOf('FormData') !== -1
+                ) {
+                  return undefined;
+                }
+              } catch (e) {}
+              return origRequest;
+            };
+
+            var requestTargets = [
+              typeof window !== 'undefined' && window,
+              typeof globalThis !== 'undefined' && globalThis,
+              typeof self !== 'undefined' && self
+            ].filter(Boolean);
+
+            for (var i = 0; i < requestTargets.length; i++) {
+              var target = requestTargets[i];
+              try {
+                var desc = Object.getOwnPropertyDescriptor(target, 'Request');
+                if (desc && !desc.configurable) {
+                  continue;
+                }
+                Object.defineProperty(target, 'Request', {
+                  get: getRequest,
+                  configurable: true,
+                  enumerable: true
+                });
+              } catch (e) {
+                console.warn('Unable to patch target Request:', e);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Unable to intercept Request:', e);
+        }
+
+        // Step 2: Configure custom getter and setter for fetch on global contexts
+        try {
+          var origFetch = window.fetch || (typeof globalThis !== 'undefined' ? globalThis.fetch : null);
+          if (origFetch) {
+            var fetchVal = origFetch;
+            var getFetch = function() { return fetchVal; };
+            var setFetch = function(val) { fetchVal = val; };
+
+            var fetchTargets = [];
+            if (typeof window !== 'undefined') fetchTargets.push(window);
+            if (typeof globalThis !== 'undefined') fetchTargets.push(globalThis);
+            if (typeof self !== 'undefined') fetchTargets.push(self);
+            if (typeof Window !== 'undefined' && Window.prototype) fetchTargets.push(Window.prototype);
+
+            for (var i = 0; i < fetchTargets.length; i++) {
+              var target = fetchTargets[i];
+              try {
+                var desc = Object.getOwnPropertyDescriptor(target, 'fetch');
+                if (desc && !desc.configurable) {
+                  continue;
+                }
+                Object.defineProperty(target, 'fetch', {
+                  get: getFetch,
+                  set: setFetch,
+                  configurable: true,
+                  enumerable: true
+                });
+              } catch (e) {
+                console.warn('Unable to patch target fetch:', e);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Unable to patch fetch property:', e);
+        }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,6 @@
+{
+  "name": "Sayed-World E-Commerce Hub",
+  "description": "A high-fidelity interactive simulation, multi-role dashboard viewer, and clean technical architecture suite representing the next-generation multi-vendor e-commerce platform 'Sayed-World'. Fits Laravel 12, MySQL, Redis, Tailwind client systems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
