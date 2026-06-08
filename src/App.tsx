@@ -15,7 +15,7 @@ import {
   Building, ShieldCheck, ShoppingBag, MessageSquare, BookOpen, Layers,
   Compass, Coins, ShieldAlert, Cpu, Settings, Copy, Check, Menu, X, 
   Sun, Moon, Users, ShoppingCart, User as UserIcon, RefreshCw, BarChart3, HelpCircle,
-  Home, LayoutGrid, ChevronRight, Shirt, Smartphone, Sparkles, Gift
+  Home, LayoutGrid, ChevronRight, Shirt, Smartphone, Sparkles, Gift, Palette, Sliders, Shield
 } from "lucide-react";
 
 const THEMES = {
@@ -84,6 +84,13 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>(UserRole.CUSTOMER);
   const [showSandboxBar, setShowSandboxBar] = useState<boolean>(false);
+  const [mobileCustomizerOpen, setMobileCustomizerOpen] = useState<boolean>(false);
+  const [developerAccessGranted, setDeveloperAccessGranted] = useState<boolean>(() => {
+    return localStorage.getItem("sayed-world-developer-access") === "true";
+  });
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [authPassword, setAuthPassword] = useState<string>("");
+  const [authError, setAuthError] = useState<string>("");
 
   // Core synchronized relational states
   const [currentProducts, setCurrentProducts] = useState<Product[]>(PRODUCTS);
@@ -151,6 +158,15 @@ export default function App() {
       setActiveTab("shop");
       setCurrentUser(prev => ({ ...prev, role: UserRole.CUSTOMER, name: "Sayed Rahman" }));
     }
+  };
+
+  // Lock developer mode and restrict role profile
+  const handleLockDeveloperMode = () => {
+    setDeveloperAccessGranted(false);
+    localStorage.removeItem("sayed-world-developer-access");
+    setShowSandboxBar(false);
+    handleRoleChange(UserRole.CUSTOMER);
+    alert("🔒 Sandbox controls and layout preference boards locked completely!");
   };
 
   // Synchronized cart logic
@@ -388,7 +404,7 @@ export default function App() {
       </div>
 
       {/* Dynamic Master Role selector rails (Collapsible for a premium clean customer view) */}
-      {showSandboxBar && (
+      {showSandboxBar && developerAccessGranted && (
         <div className="bg-slate-900/90 dark:bg-slate-950/80 border-b border-slate-800 dark:border-white/[0.05] backdrop-blur-md px-4 py-2 flex flex-col sm:flex-row justify-between items-center text-xs gap-3 z-50 relative">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-theme-primary animate-ping shrink-0" />
@@ -491,19 +507,43 @@ export default function App() {
 
 
 
-          {/* Quick Demo Settings Toggle Button */}
-          <button
-            onClick={() => setShowSandboxBar(!showSandboxBar)}
-            className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all text-xs font-bold font-sans ${
-              showSandboxBar 
-                ? "bg-theme-primary text-white border-transparent"
-                : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-theme-primary/30 text-slate-700 dark:text-slate-350"
-            }`}
-            title="Toggle Developer & Demo Sandbox Panel"
-          >
-            <Settings className={`w-3.5 h-3.5 ${showSandboxBar ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Admin Switcher</span>
-          </button>
+          {/* Dynamic Developer Gateway Panel */}
+          {developerAccessGranted ? (
+            <div className="flex items-center gap-2">
+              {/* Quick Demo Settings Toggle Button */}
+              <button
+                onClick={() => setShowSandboxBar(!showSandboxBar)}
+                className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all text-xs font-bold font-sans ${
+                  showSandboxBar 
+                    ? "bg-theme-primary text-white border-transparent"
+                    : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-theme-primary/30 text-slate-700 dark:text-slate-350"
+                }`}
+                title="Toggle Developer & Demo Sandbox Panel"
+              >
+                <Settings className={`w-3.5 h-3.5 ${showSandboxBar ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">Admin Switcher</span>
+              </button>
+
+              <button
+                onClick={handleLockDeveloperMode}
+                className="p-2 rounded-xl border border-rose-500/10 hover:border-rose-500/35 bg-rose-500/10 text-rose-500 text-xs font-bold flex items-center gap-1 active:scale-95 transition cursor-pointer"
+                title="Lock & Hide Admin Settings"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Lock Controls</span>
+              </button>
+            </div>
+          ) : (
+            /* Subtle unlock badge that looks like a SSL / secure badge */
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-xs font-bold flex items-center gap-1.5 transition active:scale-95 border border-slate-200/50 dark:border-white/10 cursor-pointer"
+              title="Click to authenticate & unlock admin control switcher configurations"
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+              <span className="hidden sm:inline">Secured Gateway</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -655,7 +695,7 @@ export default function App() {
       </main>
 
       {/* System info bar footer */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-4 mt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-4">
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-4 mt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-4 mb-20 md:mb-0">
         <div>
           <span>© 2026 Sayed-World E-Commerce platform structures. Built strictly on </span>
           <span className="font-semibold text-slate-600 dark:text-slate-200">Laravel 12 (Modern PHP 8.2+) + Tall stack.</span>
@@ -666,6 +706,396 @@ export default function App() {
           <div className="font-mono text-[10px]">Node Cluster: Port 3000 Ingress</div>
         </div>
       </footer>
+
+      {/* 📱 MODERN MOBILE-FIRST FLOATING DOCK NAVIGATION */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/85 dark:bg-slate-950/90 backdrop-blur-md border-t border-slate-200/60 dark:border-white/10 px-4 py-2 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] flex justify-between items-center pb-5">
+        
+        {/* Tab 1: Shop */}
+        <button
+          onClick={() => setActiveTab("shop")}
+          className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${
+            activeTab === "shop" 
+              ? "text-theme-primary font-bold scale-105" 
+              : "text-slate-505 dark:text-slate-400 hover:text-slate-800"
+          }`}
+        >
+          <div className={`relative p-1.5 rounded-xl transition ${activeTab === 'shop' ? 'bg-theme-light text-theme-primary' : ''}`}>
+            <Compass className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 bg-theme-primary text-white text-[8.5px] px-1 font-mono rounded-full font-bold">
+              {currentProducts.length}
+            </span>
+          </div>
+          <span className="text-[10px] tracking-tight leading-none uppercase">Market</span>
+        </button>
+
+        {developerAccessGranted && (
+          /* Tab 2: Code Roadmap */
+          <button
+            onClick={() => {
+              if (currentUserRole !== UserRole.SUPER_ADMIN) {
+                alert("Access classification restricted! Tap Color/Style Drawer below to switch your play-role to Admin to view technical specifications blueprints.");
+                return;
+              }
+              setActiveTab("roadmap");
+            }}
+            className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${
+              activeTab === "roadmap" 
+                ? "text-theme-primary font-bold scale-105" 
+                : "text-slate-505 dark:text-slate-405"
+            } ${currentUserRole !== UserRole.SUPER_ADMIN ? "opacity-45" : ""}`}
+          >
+            <div className={`p-1.5 rounded-xl transition ${activeTab === 'roadmap' ? 'bg-theme-light text-theme-primary' : ''}`}>
+              {currentUserRole !== UserRole.SUPER_ADMIN ? (
+                <Shield className="w-5 h-5 text-slate-400" />
+              ) : (
+                <Layers className="w-5 h-5" />
+              )}
+            </div>
+            <span className="text-[10px] tracking-tight leading-none uppercase">Laravel Specs</span>
+          </button>
+        )}
+
+        {developerAccessGranted && (
+          /* Dynamic Center Switch Core Theme Panel Trigger */
+          <button
+            onClick={() => setMobileCustomizerOpen(true)}
+            className="flex flex-col items-center justify-center -mt-6 bg-theme-primary text-white w-12 h-12 rounded-full shadow-lg shadow-theme-primary/30 border-4 border-white dark:border-slate-900 active:scale-90 transition transform hover:rotate-45"
+            title="Customize Theme & Smart Layouts"
+          >
+            <Palette className="w-5 h-5 animate-pulse" />
+          </button>
+        )}
+
+        {/* Tab 3: Chat */}
+        <button
+          onClick={() => setActiveTab("chat")}
+          className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all ${
+            activeTab === "chat" 
+              ? "text-theme-primary font-bold scale-105" 
+              : "text-slate-505 dark:text-slate-400"
+          }`}
+        >
+          <div className={`relative p-1.5 rounded-xl transition ${activeTab === 'chat' ? 'bg-theme-light text-theme-primary' : ''}`}>
+            <MessageSquare className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8.5px] px-1 font-mono rounded-full font-bold">
+              1
+            </span>
+          </div>
+          <span className="text-[10px] tracking-tight leading-none uppercase">Live Chat</span>
+        </button>
+
+        {developerAccessGranted ? (
+          /* Tab 4: Quick Dynamic Role Toggle Button */
+          <button
+            onClick={() => {
+              const nextRole = currentUserRole === UserRole.CUSTOMER 
+                ? UserRole.VENDOR 
+                : currentUserRole === UserRole.VENDOR 
+                  ? UserRole.SUPER_ADMIN 
+                  : UserRole.CUSTOMER;
+              handleRoleChange(nextRole);
+              alert(`Switched Play-Role profile to: ${nextRole.toUpperCase()}`);
+            }}
+            className="flex flex-col items-center gap-1 flex-1 py-1 transition-all text-slate-505 dark:text-slate-400"
+          >
+            <div className="p-1.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-xl">
+              <RefreshCw className="w-4 h-4 animate-spin-slow" />
+            </div>
+            <span className="text-[8.5px] font-black uppercase text-amber-500 line-clamp-1 max-w-[65px]">
+              {currentUserRole === UserRole.CUSTOMER ? "Customer" : currentUserRole === UserRole.VENDOR ? "Vendor" : "Admin"}
+            </span>
+          </button>
+        ) : (
+          /* Secured Badge for mobile trigger */
+          <button
+            onClick={() => setShowAuthModal(true)}
+            className="flex flex-col items-center gap-1 flex-1 py-1 transition-all text-slate-550 dark:text-slate-400 hover:text-amber-500 cursor-pointer"
+            title="Authenticate admin locks"
+          >
+            <div className="p-1.5 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-xl">
+              <Shield className="w-4 h-4 animate-pulse text-amber-500" />
+            </div>
+            <span className="text-[8.5px] font-bold uppercase text-slate-500 dark:text-slate-400 leading-none">
+              Secured
+            </span>
+          </button>
+        )}
+
+      </div>
+
+      {/* 📱 INTERACTIVE SLIDE-UP MOBILE CUSTOMER DRAWER CONTROL CENTER */}
+      {mobileCustomizerOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex justify-end flex-col animate-fade-in">
+          {/* Smooth glass blurred overlay */}
+          <div 
+            onClick={() => setMobileCustomizerOpen(false)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-300 cursor-pointer"
+          />
+
+          {/* Drawer Sheet */}
+          <div className="relative bg-slate-50 dark:bg-slate-950 border-t border-slate-250 dark:border-white/10 rounded-t-3xl max-h-[85vh] z-10 overflow-y-auto pb-10 shadow-2xl p-4 sm:p-6 text-slate-800 dark:text-slate-100 animate-slide-up">
+            
+            {/* Elegant drag handle bar */}
+            <div className="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4" />
+
+            {/* Title / Close Section */}
+            <div className="flex justify-between items-start pb-4 border-b border-slate-200/60 dark:border-white/[0.05]">
+              <div>
+                <span className="text-[9px] font-bold bg-theme-light text-theme-primary px-2 py-0.5 rounded uppercase tracking-wider block w-max mb-1">
+                  Design Presets
+                </span>
+                <h3 className="font-display font-black text-sm text-slate-950 dark:text-slate-50 flex items-center gap-2">
+                  Sayed-World Customizer Hub
+                </h3>
+                <p className="text-[10px] text-slate-405 leading-tight">পরখ করুন দারুণ সব লেটেস্ট মোবাইল রেন্ডারিং থিম ও কালার টেমপ্লেট</p>
+              </div>
+              <button 
+                onClick={() => setMobileCustomizerOpen(false)}
+                className="p-1.5 rounded-full bg-slate-200/50 dark:bg-white/5 hover:bg-slate-300/50 text-slate-60s hover:text-slate-900 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="py-4 space-y-6">
+              
+              {/* Option 1: Design Layout Engine Presets */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-theme-primary" />
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">
+                    Select Display Template Style
+                  </h4>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {[
+                    { id: "glass", title: "🔮 Classic Glass", desc: "Frosted translucent premium look" },
+                    { id: "cyber", title: "💻 Cyber Slate", desc: "Flat tech linear clean dark" },
+                    { id: "silk", title: "🌸 macOS Silk", desc: "Super soft shadows, premium colors" },
+                    { id: "brutalist", title: "⚡ Brutalist Grid", desc: "Bold, high-contrast, black borders" }
+                  ].map((style) => (
+                    <button
+                      key={style.id}
+                      onClick={() => {
+                        setDesignStyle(style.id as any);
+                      }}
+                      className={`p-3.5 rounded-2xl text-left border transition active:scale-95 flex flex-col justify-between h-20 ${
+                        designStyle === style.id
+                          ? "bg-theme-primary text-white border-transparent"
+                          : "bg-white dark:bg-slate-900 border-slate-200/70 dark:border-white/5 text-slate-800 dark:text-slate-200"
+                      }`}
+                    >
+                      <span className="text-xs font-bold block">{style.title}</span>
+                      <span className={`text-[9px] block leading-tight ${designStyle === style.id ? 'text-white/80' : 'text-slate-400'}`}>
+                        {style.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Option 2: Active Color Preset Palettes */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Palette className="w-4 h-4 text-theme-primary" />
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">
+                    Store Accent Palette
+                  </h4>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(THEMES) as Array<keyof typeof THEMES>).map((themeKey) => {
+                    const th = THEMES[themeKey];
+                    const isSelected = selectedTheme === themeKey;
+                    return (
+                      <button
+                        key={themeKey}
+                        onClick={() => setSelectedTheme(themeKey)}
+                        className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition active:scale-95 ${
+                          isSelected
+                            ? "bg-white dark:bg-slate-900 shadow-sm border-theme-primary text-theme-primary"
+                            : "bg-white/40 dark:bg-slate-900/40 border-slate-200/50 dark:border-white/5 text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        <span 
+                          className="w-4 h-4 rounded-full border border-white/20 shrink-0" 
+                          style={{ backgroundColor: th.primary }}
+                        />
+                        <span className="truncate">{th.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Option 3: Quick Play-Role Switcher */}
+              <div className="p-3.5 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200/40 dark:border-white/[0.03] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                    Role Simulation System
+                  </span>
+                  <span className="text-[9px] text-amber-500 font-extrabold pb-0.5">Fast Testing Profile</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { role: UserRole.CUSTOMER, label: "Customer" },
+                    { role: UserRole.VENDOR, label: "Seller" },
+                    { role: UserRole.SUPER_ADMIN, label: "Admin" }
+                  ].map((item) => (
+                    <button
+                      key={item.role}
+                      onClick={() => {
+                        handleRoleChange(item.role);
+                      }}
+                      className={`p-2 rounded-xl text-center text-[10px] font-bold uppercase transition active:scale-95 ${
+                        currentUserRole === item.role
+                          ? "bg-amber-500 text-white"
+                          : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Option 4: Light/Dark System Toggle */}
+              <div className="flex items-center justify-between p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                <div className="space-y-0.5">
+                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Eye Protection Mode</h5>
+                  <p className="text-[10px] text-slate-450">টগল করুন ডার্ক ও লাইট থিমের মধ্যে</p>
+                </div>
+                <button
+                  onClick={() => setThemeMode(themeMode === "light" ? "dark" : "light")}
+                  className="p-2.5 px-4 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 text-slate-800 dark:text-slate-200 hover:dark:bg-white/10 active:scale-95 transition flex items-center gap-2 font-bold text-xs"
+                >
+                  {themeMode === "light" ? (
+                    <>
+                      <Moon className="w-4 h-4 text-theme-primary" />
+                      <span>Dark Theme</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sun className="w-4 h-4 text-amber-400" />
+                      <span>Light Theme</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </div>
+
+            {/* Quick action button inside drawer */}
+            <button
+              onClick={() => setMobileCustomizerOpen(false)}
+              className="w-full mt-2 py-3.5 bg-theme-primary hover:bg-theme-hover text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-transform duration-100 active:scale-95 cursor-pointer shadow-md shadow-theme-border"
+            >
+              Apply Theme & Return to Storefront
+            </button>
+
+          </div>
+        </div>
+      )}
+
+      {/* 🔒 ACCESS KEY / SECURITY PASSPHRASE AUTHENTICATION MODAL */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+          {/* Glass blur overlay */}
+          <div 
+            onClick={() => {
+              setShowAuthModal(false);
+              setAuthError("");
+              setAuthPassword("");
+            }}
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity duration-300"
+          />
+
+          {/* Dialog Card Box */}
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl z-10 space-y-4 animate-slide-up">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-500/10 text-amber-500 p-2.5 rounded-xl shrink-0">
+                <Shield className="w-5 h-5 text-amber-500 animate-pulse" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display font-bold text-slate-900 dark:text-slate-50 text-sm leading-none">
+                  Security Lock Gate
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-1 leading-tight">
+                  Enter Password key to unlock developer and admin role preferences.
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setAuthError("");
+                  setAuthPassword("");
+                }}
+                className="p-1 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 text-slate-450 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const pass = authPassword.trim();
+                if (pass === "sayed123" || pass === "admin123") {
+                  setDeveloperAccessGranted(true);
+                  localStorage.setItem("sayed-world-developer-access", "true");
+                  setShowAuthModal(false);
+                  setAuthError("");
+                  setAuthPassword("");
+                  alert("🔑 Access Granted! Admin switcher controls and theme palette customizers are now fully unlocked.");
+                } else if (!pass) {
+                  setAuthError("Please input the passcode!");
+                } else {
+                  setAuthError("Wrong password key code! Try sayed123.");
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase leading-none block">
+                  Store Access Key Passphrase
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter Password (e.g. sayed123)"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full text-xs font-bold font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/5 p-3 rounded-xl focus:outline-none focus:ring-1.5 focus:ring-amber-500 focus:border-transparent tracking-widest text-center"
+                  autoFocus
+                />
+                {authError && (
+                  <p className="text-[10.5px] font-bold text-red-500 pt-1 leading-none text-center">
+                    ⚠️ {authError}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    setAuthError("");
+                    setAuthPassword("");
+                  }}
+                  className="py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-500 rounded-xl font-bold text-xs transition active:scale-95 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="py-2.5 bg-theme-primary text-white hover:bg-theme-hover rounded-xl font-black text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
+                >
+                  Confirm Key
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
