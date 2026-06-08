@@ -3,7 +3,8 @@ import { Product, VendorStore, User } from "../types";
 import { VENDOR_STORES } from "../data";
 import { 
   ShieldCheck, RefreshCw, Star, Users, ArrowUpRight, TrendingUp, DollarSign, 
-  Settings2, Activity, Check, X, AlertCircle, Building, Sliders, MessageSquare
+  Settings2, Activity, Check, X, AlertCircle, Building, Sliders, MessageSquare,
+  Coins, Palette, Gift, Sparkles, Wallet
 } from "lucide-react";
 
 interface AdminPanelProps {
@@ -12,9 +13,19 @@ interface AdminPanelProps {
   onApproveStore: (storeId: string, status: boolean) => void;
   orders: any[];
   onApproveReview?: (reviewId: string, approved: boolean) => void;
+  designStyle?: "glass" | "cyber" | "brutalist" | "silk";
+  onSwitchDesignStyle?: (style: "glass" | "cyber" | "brutalist" | "silk") => void;
+  onAddFunds?: (amount: number) => void;
+  onSwitchTab?: (tabId: "shop" | "vendor" | "admin" | "chat" | "roadmap") => void;
+  currentUser?: User;
+  onAddCoins?: (amount: number) => void;
 }
 
-export default function AdminPanel({ products, vendorStores, onApproveStore, orders }: AdminPanelProps) {
+export default function AdminPanel({ 
+  products, vendorStores, onApproveStore, orders,
+  designStyle, onSwitchDesignStyle, onAddFunds, onSwitchTab,
+  currentUser, onAddCoins
+}: AdminPanelProps) {
   // Onboarding queue log
   const [storesQueue, setStoresQueue] = useState<any[]>([
     { id: "store-q-1", name: "Chittagong Sail Exporters", owner: "Kazi Kamal", category: "Marine & Cargo Handcrafts", status: "Pending" },
@@ -54,8 +65,181 @@ export default function AdminPanel({ products, vendorStores, onApproveStore, ord
     alert(`Review marked as ${approve ? "Approved & Publicly Visible" : "Rejected & Deleted"}.`);
   };
 
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const handleClaimFunds = () => {
+    if (onAddFunds) {
+      onAddFunds(5000);
+      setClaimStatus("🎉 Success! Dispatched ৳5,000 to customer wallet.");
+      setTimeout(() => setClaimStatus(null), 3000);
+    } else {
+      alert("Error: Funds dispatcher interface was bound to a stale context.");
+    }
+  };
+
+  const handleClaimCoinsLocal = () => {
+    if (onAddCoins) {
+      onAddCoins(1000);
+      setClaimStatus("🌟 Success! Dispatched 1,000 Loyalty Coins.");
+      setTimeout(() => setClaimStatus(null), 3000);
+    } else {
+      alert("Loyalty subsystem is loading, please try again.");
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
+      
+      {/* 🔮 Super Admin Sandbox Control (Migrated Developer Controls) */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950/90 to-slate-900 border border-indigo-500/30 rounded-2xl p-5 text-white space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl">
+              <ShieldCheck className="w-5 h-5 text-indigo-400" />
+            </span>
+            <div>
+              <h3 className="font-display font-medium text-sm text-slate-100 flex items-center gap-2">
+                Sayed-World Developer & Theme Sandbox Control
+                <span className="text-[10px] bg-theme-primary text-white font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                  Admin Active
+                </span>
+              </h3>
+              <p className="text-[10px] text-slate-400 leading-none">Manage platform styles, test wallet credits, and launch fast vendor gateways.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 shadow-inner">
+            <div className="text-center">
+              <span className="text-[8px] block text-slate-400 font-semibold tracking-wider font-sans leading-none pb-0.5">CURRENT WALLET</span>
+              <span className="font-bold text-emerald-400 text-xs">৳{currentUser?.walletBalance?.toLocaleString() || "0"}</span>
+            </div>
+            <div className="w-px bg-white/10 h-6" />
+            <div className="text-center">
+              <span className="text-[8px] block text-slate-400 font-semibold tracking-wider font-sans leading-none pb-0.5">LOYALTY COINS</span>
+              <span className="font-bold text-amber-400 text-xs">{currentUser?.loyaltyPoints || "0"} PTS</span>
+            </div>
+          </div>
+        </div>
+
+        {claimStatus && (
+          <div className="bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 p-2.5 rounded-xl text-xs font-bold text-center animate-pulse">
+            {claimStatus}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          {/* Theme custom styles selection widgets */}
+          <div className="bg-white/5 p-3.5 rounded-xl border border-white/5 space-y-2.5">
+            <h4 className="text-xs font-bold font-sans text-slate-200 flex items-center gap-1.5">
+              <Palette className="w-4 h-4 text-indigo-400" />
+              Design System Style Customizer
+            </h4>
+            <p className="text-[10px] text-slate-400 leading-tight">Apply organic styles instantly to see how customer storefront visuals transform.</p>
+            
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: "glass", emoji: "🔮", label: "Classic Glass" },
+                { id: "cyber", emoji: "💻", label: "Cyber Slate" },
+                { id: "silk", emoji: "🌸", label: "macOS Silk" },
+                { id: "brutalist", emoji: "⚡", label: "Brutalist Grid" }
+              ].map(opt => {
+                const isActive = designStyle === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => onSwitchDesignStyle && onSwitchDesignStyle(opt.id as any)}
+                    className={`p-2 rounded-lg text-left border text-[11px] font-bold transition-all ${
+                      isActive 
+                        ? "bg-indigo-500/20 border-indigo-400 text-white" 
+                        : "bg-black/25 border-white/5 hover:border-white/10 text-slate-350"
+                    }`}
+                  >
+                    <span>{opt.emoji} {opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 🎟️ Admin Vouchers Workbench Section */}
+          <div className="bg-white/5 p-3.5 rounded-xl border border-white/5 space-y-2">
+            <h4 className="text-xs font-bold font-sans text-slate-200 flex items-center gap-1.5">
+              <Gift className="w-4 h-4 text-amber-400 animate-pulse" />
+              Campaign Voucher Workbench
+            </h4>
+            <p className="text-[10px] text-slate-400 leading-tight">Emit, collect, or test coupons on behalf of the customer simulated context.</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  if (onAddFunds) onAddFunds(100);
+                  alert("🎉 Voucher WELCOME100 simulated! Added ৳100 discount equivalent value straight to user wallet.");
+                }}
+                className="p-1.5 text-left rounded-lg bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition text-[10px] font-bold text-rose-300 flex flex-col"
+              >
+                <span>🎟️ WELCOME100 Promo</span>
+                <span className="text-[8px] text-slate-400 font-semibold leading-none mt-0.5">Claims ৳100 Reduction</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (onAddFunds) onAddFunds(50);
+                  alert("🎉 Coupon SAYED50 simulated! Added BDT ৳50 flat savings code equivalent straight to user wallet.");
+                }}
+                className="p-1.5 text-left rounded-lg bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition text-[10px] font-bold text-teal-300 flex flex-col"
+              >
+                <span>🎟️ SAYED50 Coupon</span>
+                <span className="text-[8px] text-slate-400 font-semibold leading-none mt-0.5">Claims ৳50 Reduction</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Hub Gateways Shortcuts */}
+          <div className="bg-white/5 p-3.5 rounded-xl border border-white/5 space-y-2">
+            <h4 className="text-xs font-bold font-sans text-slate-200 flex items-center gap-1.5">
+              <Wallet className="w-4 h-4 text-indigo-400" />
+              Funds Dispatcher Controls
+            </h4>
+            <p className="text-[10px] text-slate-400 leading-tight">Inject demo balances instantly into the simulated client wallet database to test checkout.</p>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={handleClaimFunds}
+                className="flex-1 p-2 rounded-lg text-center bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[10.5px] font-bold shadow transition flex items-center justify-center gap-1"
+              >
+                <Coins className="w-3.5 h-3.5" />
+                +৳5,000 Wallet
+              </button>
+              <button
+                onClick={handleClaimCoinsLocal}
+                className="flex-1 p-2 rounded-lg text-center bg-indigo-650 hover:bg-indigo-600 active:scale-95 text-white text-[10.5px] font-bold shadow transition flex items-center justify-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                +1,000 Coins
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Short-circuit global tab shortcuts line for quick navigation testing */}
+        <div className="pt-2 border-t border-white/5 flex flex-wrap justify-between items-center gap-2">
+          <span className="text-[9.5px] text-slate-400 font-medium">Verify customer storefronts and inventory instantly:</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onSwitchTab && onSwitchTab("shop")}
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 border border-white/5 transition"
+            >
+              🛒 Go to Customer Shop
+            </button>
+            <button
+              onClick={() => onSwitchTab && onSwitchTab("vendor")}
+              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-slate-300 border border-white/5 transition"
+            >
+              🏬 Go to Vendor Hub
+            </button>
+          </div>
+        </div>
+      </div>
       
       {/* Platform financial metrics charts indicators */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

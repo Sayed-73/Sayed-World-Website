@@ -193,6 +193,167 @@ export const PRODUCTS: Product[] = [
       "Capacity": "4.5 Liters",
       "Weight": "1.8kg Solid build"
     }
+  },
+  {
+    id: "prod-6",
+    vendorStoreId: "store-3",
+    title: "Surf Excel Liquid Detergent (1 Litre)",
+    slug: "surf-excel-liquid-1l",
+    description: "Ultimate formula for washing machines and hand wash. Ensures tough stain removal inside the machine in one wash. Protects clothes from fading and keeps them fresh.",
+    price: 277,
+    oldPrice: 400,
+    images: [
+      "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600&auto=format&fit=crop&q=80"
+    ],
+    categoryId: "cat-5",
+    rating: 4.9,
+    stockCount: 6,
+    salesCount: 752,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Volume": "1 Litre",
+      "Type": "Concentrated Laundry Liquid",
+      "Packaging": "Ergonomic Spout Bottle"
+    }
+  },
+  {
+    id: "prod-7",
+    vendorStoreId: "store-1",
+    title: "Xiaomi Handheld Rechargeable Portable Fan",
+    slug: "xiaomi-portable-fan",
+    description: "Multi-speed powerful smart portable fan with digital display showing energy speeds and battery percentage. Compact, foldable design with super silent motor, perfect for the hot summer commute.",
+    price: 493,
+    oldPrice: 1000,
+    images: [
+      "https://images.unsplash.com/photo-1618944847023-38aa001235f0?w=600&auto=format&fit=crop&q=80"
+    ],
+    categoryId: "cat-2",
+    rating: 4.8,
+    stockCount: 6,
+    salesCount: 540,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Speeds": "5 Gear Levels with LED Counter",
+      "Battery": "3000mAh Type-C rechargeable",
+      "Noise Level": "Less than 20dB"
+    }
+  },
+  {
+    id: "prod-8",
+    vendorStoreId: "store-1",
+    title: "Walton Direct Cool Refrigerator (220L)",
+    slug: "walton-refrigerator-220l",
+    description: "Ultra elegant direct cooling system with state of the art inverter technology. Saves up to 60% electricity. Stabilizer free operation with tempered glass door design.",
+    price: 19990,
+    oldPrice: 29990,
+    images: [
+      "https://images.unsplash.com/photo-1571875257727-256c3aae42af?w=600&auto=format&fit=crop&q=80"
+    ],
+    categoryId: "cat-2",
+    rating: 4.7,
+    stockCount: 3,
+    salesCount: 22,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Capacity": "220 Liters",
+      "Technology": "Intelligent Inverter Technology",
+      "Warranty": "10 Years Compressor Warranty"
+    }
+  },
+  {
+    id: "prod-9",
+    vendorStoreId: "store-2",
+    title: "Elegant Kashmiri Georgette Kurti Set",
+    slug: "kashmiri-georgette-kurti-set",
+    description: "Featuring majestic floral embroidery, lightweight premium georgette fabric, and complete inner lining. Beautiful traditional boutique design which exhibits sheer grace and elegant comfort.",
+    price: 1850,
+    oldPrice: 2600,
+    images: [
+      "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80"
+    ],
+    categoryId: "cat-1",
+    rating: 4.8,
+    stockCount: 15,
+    salesCount: 88,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Fabric": "Non-shrinkable Georgette",
+      "Work": "Kashmiri Needlework embroidery",
+      "Sleeve": "Three-Quarter Sleeves"
+    }
+  },
+  {
+    id: "prod-10",
+    vendorStoreId: "store-3",
+    title: "Simple Hydrating Moisturizing Face Wash",
+    slug: "simple-moisturizing-face-wash",
+    description: "100% soap-free cooling face wash packed with skin-loving pro-vitamin B5 and vitamin E. Cleanses gently without leaving the skin dehydrated or dry. Perfect for sensitive cells.",
+    price: 340,
+    oldPrice: 490,
+    images: [
+      "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80"
+    ],
+    categoryId: "cat-4",
+    rating: 4.9,
+    stockCount: 42,
+    salesCount: 310,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Volume": "150ml Standard Tube",
+      "Suitability": "All skin types inclusive of Sensitive skin",
+      "Chemicals": "No artificial fragrance, No colorants"
+    }
+  },
+  {
+    id: "prod-11",
+    vendorStoreId: "store-2",
+    title: "Modern Ergonomic Royal Relax Sofa",
+    slug: "royal-relax-sofa-chair",
+    description: "Superior high-density reflex foam wrapped in soft textured wear-resistant upholstery. Styled with rich wooden arm accents to breathe comfortable luxury into your modern lounge setting.",
+    price: 14500,
+    oldPrice: 21000,
+    images: [
+      "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=600&auto=format&fit=crop&q=80"
+    ],
+    categoryId: "cat-3",
+    rating: 4.6,
+    stockCount: 4,
+    salesCount: 12,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Frame Material": "Seasoned Solid Mahogany wood",
+      "Cushioning": "Super Soft Orthopedic Grade High Resilience Sponge",
+      "Dimensions": "32in H x 30in W x 34in D"
+    }
+  },
+  {
+    id: "prod-12",
+    vendorStoreId: "store-1",
+    title: "Sayed-Sound Premium ANC Pro Earphones",
+    slug: "sayed-sound-anc-pro",
+    description: "Premium sports neckband with advanced fast charge options, active noise cancellation up to 30dB, and signature extra deep bass audio output tailored precisely for local music buffs.",
+    price: 1250,
+    oldPrice: 2200,
+    images: [
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80"
+    ],
+    categoryId: "cat-2",
+    rating: 4.8,
+    stockCount: 28,
+    salesCount: 94,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Playback": "30 Hours of immersive playback",
+      "Charging": "10-Min charge yields 8-Hrs playback",
+      "Protection": "IPX5 Sweat & Water protection"
+    }
   }
 ];
 

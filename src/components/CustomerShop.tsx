@@ -5,7 +5,8 @@ import {
   ShoppingBag, Star, HelpCircle, Heart, Share2, Sparkles, Filter, 
   Search, SlidersHorizontal, ShoppingCart, Plus, Minus, Trash2, 
   X, Check, ChevronRight, Truck, CreditCard, CheckCircle2, Ticket,
-  Clock, Flame, Trophy
+  Clock, Flame, Trophy, Coins, Palette, ArrowRight, Shield, Wallet, Percent, Tag, MessageSquare,
+  Shirt, Smartphone, Home, Gift
 } from "lucide-react";
 
 interface CustomerShopProps {
@@ -18,11 +19,110 @@ interface CustomerShopProps {
   currentUser: User;
   selectedCategory: string;
   setSelectedCategory: (catId: string) => void;
+  designStyle: "glass" | "cyber" | "brutalist" | "silk";
+  onSwitchDesignStyle: (style: "glass" | "cyber" | "brutalist" | "silk") => void;
+  onAddFunds: (amount: number) => void;
+  onSwitchTab: (tabId: "shop" | "vendor" | "admin" | "chat" | "roadmap") => void;
+}
+
+const CATEGORY_IMAGES_MAP: { [key: string]: string[] } = {
+  "all": [
+    "https://images.unsplash.com/photo-1472851294608-062f824d296e?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=150&auto=format&fit=crop&q=80"
+  ],
+  "cat-1": [ // Fashion & Apparel
+    "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?w=150&auto=format&fit=crop&q=80"
+  ],
+  "cat-2": [ // Electronics & Gadgets
+    "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=150&auto=format&fit=crop&q=80"
+  ],
+  "cat-3": [ // Home & Living
+    "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=150&auto=format&fit=crop&q=80"
+  ],
+  "cat-4": [ // Beauty & Personal Care
+    "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1515688594390-b649af70d282?w=150&auto=format&fit=crop&q=80"
+  ],
+  "cat-5": [ // Groceries & Organic
+    "https://images.unsplash.com/photo-1542838132-92c53300491e?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1506617498719-38f4d345d222?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=150&auto=format&fit=crop&q=80"
+  ],
+  "cat-6": [ // Traditional Crafts & Gifts
+    "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1606744824163-985d376605aa?w=150&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=150&auto=format&fit=crop&q=80"
+  ]
+};
+
+interface LiveCategoryCircleProps {
+  key?: string;
+  catId: string;
+  name: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function LiveCategoryCircle({ catId, name, isActive, onClick }: LiveCategoryCircleProps) {
+  const images = CATEGORY_IMAGES_MAP[catId] || CATEGORY_IMAGES_MAP["all"];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    // Cycles images automatically to give the "live active feed" e-commerce vibe requested!
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 2500 + Math.random() * 800);
+    return () => clearInterval(interval);
+  }, [images]);
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-2 focus:outline-none group cursor-pointer transition-transform duration-300 active:scale-95 shrink-0"
+    >
+      <div className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300 ${
+        isActive
+          ? "ring-4 ring-emerald-500 scale-105 shadow-md shadow-emerald-500/30 border-2 border-white dark:border-slate-900"
+          : "ring-2 ring-slate-100 dark:ring-white/10 hover:ring-emerald-300 border-2 border-transparent"
+      }`}>
+        <img
+          src={images[currentIndex]}
+          alt={name}
+          referrerPolicy="no-referrer"
+          className="w-full h-full object-cover transition-all duration-700 ease-in-out"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+        {isActive && (
+          <div className="absolute inset-0 bg-emerald-600/10 mix-blend-multiply" />
+        )}
+      </div>
+      <span className={`text-[10px] sm:text-[11px] font-extrabold tracking-tight leading-tight transition duration-200 line-clamp-1 max-w-[76px] text-center uppercase ${
+        isActive ? "text-emerald-600 dark:text-emerald-400 font-extrabold" : "text-slate-600 dark:text-slate-350 group-hover:text-emerald-500"
+      }`}>
+        {name === "Groceries & Organic" ? "Groceries" : name === "Traditional Crafts & Gifts" ? "Crafts & Gifts" : name === "Beauty & Personal Care" ? "Beauty" : name === "Electronics & Gadgets" ? "Gadgets" : name === "Fashion & Apparel" ? "Fashion" : name}
+      </span>
+    </button>
+  );
 }
 
 export default function CustomerShop({ 
   cart, addToCart, updateCartQty, removeFromCart, clearCart, onOrderPlaced, currentUser,
-  selectedCategory, setSelectedCategory
+  selectedCategory, setSelectedCategory, designStyle, onSwitchDesignStyle, onAddFunds, onSwitchTab
 }: CustomerShopProps) {
   
   // Shopping logic states
@@ -56,6 +156,29 @@ export default function CustomerShop({
   });
 
   const [bookingResponse, setBookingResponse] = useState<any>(null);
+
+  // Home-migrated Claim Reward and Promo verifying states
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [quickPromoCode, setQuickPromoCode] = useState("");
+  const [promoMessage, setPromoMessage] = useState<string | null>(null);
+
+  const handleClaimReward = () => {
+    onAddFunds(5000);
+    setClaimStatus("🎉 অভিনন্দন! ৳৫,০০০/- গ্রাহক উপহার কোড আপনার ওয়ালেটে যুক্ত হয়েছে!");
+    setTimeout(() => setClaimStatus(null), 4000);
+  };
+
+  const handleVerifyCoupon = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = quickPromoCode.trim().toUpperCase();
+    if (code === "SAYED77" || code === "TALL12") {
+      setPromoMessage("✅ Valid Global Promo! Get flat 15% discount in customer checkout.");
+    } else if (code === "") {
+      setPromoMessage("⚠️ Please enter a coupon code.");
+    } else {
+      setPromoMessage("❌ Expired or Unrecognized Promo. Try 'SAYED77' instead!");
+    }
+  };
 
   // Live timer tick
   useEffect(() => {
@@ -183,9 +306,9 @@ export default function CustomerShop({
   };
 
   // Dynamic collections for specialized customer sections
-  const newArrivals = [...PRODUCTS].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 4);
-  const trendingProducts = [...PRODUCTS].sort((a, b) => b.rating - a.rating || b.salesCount - a.salesCount).slice(0, 4);
-  const bestSellers = [...PRODUCTS].sort((a, b) => b.salesCount - a.salesCount).slice(0, 4);
+  const newArrivals = [...PRODUCTS].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 5);
+  const trendingProducts = [...PRODUCTS].sort((a, b) => b.rating - a.rating || b.salesCount - a.salesCount).slice(0, 5);
+  const bestSellers = [...PRODUCTS].sort((a, b) => b.salesCount - a.salesCount).slice(0, 5);
 
   // Filter products by category and query
   const filteredProducts = PRODUCTS.filter(p => {
@@ -196,368 +319,555 @@ export default function CustomerShop({
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       
-      {/* Search and Filters Bar */}
-      <div className="glass-panel rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between relative z-10">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-450 dark:text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search Sayed-World products, spices, outfits..."
-            className="w-full text-xs pl-9 pr-4 py-2 bg-white/40 dark:bg-slate-950/40 border border-slate-200/50 dark:border-white/10 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-lg text-slate-700 dark:text-slate-300 placeholder-slate-450"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
+      {/* 🤝 Top Daraz-Style Trust Header Ticker Line */}
+      <div className="bg-slate-950 dark:bg-black text-slate-100 text-[10px] sm:text-xs py-2 px-3 sm:px-4 rounded-xl flex justify-between items-center font-bold tracking-tight shadow-md hover:scale-101 transition-transform relative z-20">
+        <span className="flex items-center gap-1">🤝 Safe Payment</span>
+        <span className="text-slate-800">|</span>
+        <span className="flex items-center gap-1">⚡ Fast Delivery</span>
+        <span className="text-slate-800">|</span>
+        <span className="flex items-center gap-1">🔄 14-Day Free Return</span>
+      </div>
+
+      {/* 🔍 Search and Filters Bar with High Accessibility & Image Search Lens icon */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.05] rounded-xl p-3 flex flex-col sm:flex-row gap-3 items-center justify-between relative z-10 shadow-xs">
+        <div className="relative w-full flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-3 w-4 h-4 text-emerald-500 animate-pulse" />
+            <input
+              type="text"
+              placeholder="Search Sayed-World products, spices, high outfits..."
+              className="w-full text-xs pl-9 pr-12 py-2.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-xl text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:bg-white dark:focus:bg-slate-950 transition-all font-semibold"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {/* Camera Lens Indicator just like Daraz screenshot */}
+            <button 
+              onClick={() => alert("📸 Snap & Search activated! Capture your item style to scan in our database.")}
+              className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-emerald-500 text-[13px] transition cursor-pointer"
+              title="Snap Search by Image"
+            >
+              📷
+            </button>
+          </div>
+          <button 
+            onClick={() => alert(`Showing search filters for "${searchQuery || "All"}"`)}
+            className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+
+      {/* 🏷️ Top-Tier Circular Custom Category Grid (Stacked Layout: Icon on Top, Name Below) */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm relative z-10">
+        <div className="flex items-center justify-between mb-3.5">
+          <h3 className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-500" />
+            Browse Premium Categories • ক্যাটাগরি সমূহ
+          </h3>
+          <span className="text-[10px] text-slate-400 font-medium font-mono">
+            {CATEGORIES.length + 1} Channels Active
+          </span>
         </div>
         
-        {/* Horizontal Category Pill Switches */}
-        <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
-          <button
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-emerald-500/10 scrollbar-track-transparent snap-x md:grid md:grid-cols-7 md:gap-3 justify-items-center">
+          
+          {/* Option 1: All Products */}
+          <LiveCategoryCircle
+            catId="all"
+            name="All Products"
+            isActive={selectedCategory === "all"}
             onClick={() => setSelectedCategory("all")}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              selectedCategory === "all"
-                ? "bg-emerald-650 text-white shadow-md shadow-emerald-500/20"
-                : "glass-card hover:bg-white/15 text-slate-650 dark:text-slate-350"
-            }`}
-          >
-            All Products
-          </button>
+          />
+
+          {/* Dynamic Channels map */}
           {CATEGORIES.map(cat => (
-            <button
+            <LiveCategoryCircle
               key={cat.id}
+              catId={cat.id}
+              name={cat.name}
+              isActive={selectedCategory === cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
-                selectedCategory === cat.id
-                  ? "bg-emerald-650 text-white shadow-md shadow-emerald-500/20"
-                  : "glass-card hover:bg-white/15 text-slate-650 dark:text-slate-350"
-              }`}
-            >
-              {cat.name}
-            </button>
+            />
           ))}
         </div>
       </div>
 
-      {/* Hero Banner with Live countdown */}
-      <div className="bg-gradient-to-r from-emerald-950/70 to-slate-950/70 backdrop-blur-md border border-slate-200/20 dark:border-white/10 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden shadow-md flex flex-col md:flex-row justify-between items-center gap-6 z-10">
-        <div className="max-w-lg z-10 space-y-3">
-          <span className="bg-emerald-500 text-white font-mono font-bold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 w-fit">
-            <Sparkles className="w-3.5 h-3.5 animate-spin" />
-            Sayed-World Flash Sale
-          </span>
-          <h2 className="text-2xl md:text-3xl font-display font-bold leading-tight">
-            Authentic Bangladeshi Crafts <br className="hidden md:inline" />
-            & Luxury Electronics
-          </h2>
-          <p className="text-slate-300 text-xs">
-            Experience our premium multi-vendor collection. Free instant delivery to key Dhaka areas on transactions exceeding ৳2000!
-          </p>
-        </div>
-
-        {/* Live Timer Card */}
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/15 text-center shrink-0 w-full sm:w-auto">
-          <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-widest mb-2">Deal Expires In:</div>
-          <div className="flex gap-2 justify-center font-mono font-semibold text-lg">
-            <div className="bg-slate-900/60 p-2.5 rounded-md min-w-[50px]">{String(expiryTime.h).padStart(2, "0")}h</div>
-            <div className="p-2.5">:</div>
-            <div className="bg-slate-900/60 p-2.5 rounded-md min-w-[50px]">{String(expiryTime.m).padStart(2, "0")}m</div>
-            <div className="p-2.5">:</div>
-            <div className="bg-slate-900/60 p-2.5 rounded-md min-w-[50px] text-emerald-400">{String(expiryTime.s).padStart(2, "0")}s</div>
-          </div>
-          <div className="text-[9px] text-slate-300 mt-2">Code VAL: **SAYED50** matches BDT discount</div>
-        </div>
-      </div>
-
-      {/* 🌟 New Arrivals, Trending & Best Selling Product Sections */}
+      {/* 🚀 1. Sayed-World Bangladesh Campaign Hub */}
       {selectedCategory === "all" && searchQuery === "" && (
         <div className="space-y-4 animate-fade-in relative z-10">
-          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-white/[0.05] pb-2">
-            <span className="bg-theme-light text-theme-primary p-1.5 rounded-lg">
-              <Sparkles className="w-4 h-4 text-theme-primary animate-pulse" />
-            </span>
-            <div>
-              <h3 className="font-display font-medium text-sm text-slate-900 dark:text-slate-100">
-                Premium Store Highlights • আমাদের সেরা কালেকশন
-              </h3>
-              <p className="text-[10px] text-slate-450 dark:text-slate-500 font-medium">নতুন ডিজাইন, সেরা মানের পণ্য ও ট্রেন্ডিং অফারের সমাহার</p>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* ⚡ Fire Red Countdown Flash Sale Widget */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.04] p-3.5 rounded-2xl relative overflow-hidden shadow-xs space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-1">
+                  ⚡ Flash Sale
+                </span>
+                
+                {/* Fire Red Countdown design from Daraz screenshot */}
+                <div className="flex gap-1 items-center font-mono font-black text-xs">
+                  <span className="bg-rose-600 text-white px-1.5 py-0.5 rounded text-[10px]">{String(expiryTime.h).padStart(2, "0")}</span>
+                  <span className="text-rose-600 font-sans">:</span>
+                  <span className="bg-rose-600 text-white px-1.5 py-0.5 rounded text-[10px]">{String(expiryTime.m).padStart(2, "0")}</span>
+                  <span className="text-rose-600 font-sans">:</span>
+                  <span className="bg-rose-600 text-white px-1.5 py-0.5 rounded text-[10px]">{String(expiryTime.s).padStart(2, "0")}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("clothing");
+                  alert("Filtering to high-conversion clothing and outfits Flash category.");
+                }}
+                className="text-[11px] font-bold text-rose-500 hover:text-rose-600 flex items-center gap-1 cursor-pointer"
+              >
+                Shop More • আরও দেখুন →
+              </button>
+            </div>
             
-            {/* Columns 1: New Arrivals */}
-            <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl p-5 border border-slate-200/60 dark:border-white/5 space-y-4 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.05] pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="bg-theme-light p-1.5 rounded-lg text-theme-primary">
-                    <Clock className="w-4 h-4 text-theme-primary animate-spin-slow" />
-                  </div>
-                  <div>
-                    <h4 className="font-display font-bold text-xs text-slate-800 dark:text-slate-100">
-                      New Arrival Products
-                    </h4>
-                    <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium">নতুন আগমন ও অভিনব কালেকশন</p>
-                  </div>
-                </div>
-              </div>
+            <div className="bg-rose-500/10 border border-rose-500/15 p-2 rounded-xl text-[10.5px] text-rose-600 dark:text-rose-400 font-bold leading-normal">
+              ⚡ Global Voucher code applied automatically on orders. Click "Collect Vouchers" above to grab flat reductions!
+            </div>
+          </div>
 
-              <div className="space-y-3.5">
-                {newArrivals.map((p) => (
-                  <div 
-                    key={`shop-new-${p.id}`}
-                    onClick={() => setSelectedProduct(p)}
-                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/40 transition border border-transparent hover:border-slate-100 dark:hover:border-white/5 group cursor-pointer"
-                  >
-                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-950/70 shrink-0 border border-slate-200/50 dark:border-white/5">
-                      <img 
-                        src={p.images[0]} 
-                        alt={p.title} 
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
-                      />
-                      <div className="absolute top-0 right-0 bg-theme-primary text-white text-[7px] font-extrabold px-1 py-0.5 rounded-bl shadow-xs">
-                        NEW
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h5 className="text-[11.5px] font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-theme-primary transition-colors">
-                        {p.title}
-                      </h5>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="flex items-center gap-0.5 text-amber-500">
-                          <Star className="w-2.5 h-2.5 fill-amber-500" />
-                          <span className="text-[9px] font-bold font-mono">{p.rating}</span>
-                        </div>
-                        <span className="text-slate-350 dark:text-slate-700 text-[10px]">•</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono">
-                          {p.stockCount > 0 ? `${p.stockCount} in stock` : "Out of Stock"}
-                        </span>
-                      </div>
-                      <div className="text-[10.5px] font-bold text-slate-900 dark:text-slate-105 font-mono mt-0.5">
-                        ৳{p.price.toLocaleString()}
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedProduct(p);
-                      }}
-                      className="py-1 px-2.5 text-[9.5px] bg-slate-100 hover:bg-theme-primary dark:bg-slate-800 hover:dark:bg-theme-primary text-slate-700 hover:text-white dark:text-slate-200 hover:dark:text-white rounded-md font-bold transition duration-150 cursor-pointer active:scale-95 whitespace-nowrap"
-                    >
-                      View
-                    </button>
-                  </div>
-                ))}
+          {/* 📱 2. Daraz/Amazon style circles/quick channels layout */}
+          <div className="grid grid-cols-4 sm:grid-cols-4 gap-3 pt-1">
+            
+            {/* Quick Button 1: Gifts */}
+            <div 
+              onClick={() => {
+                alert("🎁 Congratulations! You opened the Surprising Gifts Box and unlocked Coupon Code 'WELCOME100' or 'SAYED50'!");
+              }}
+              className="cursor-pointer flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-950/20 transition group"
+            >
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-550 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform text-lg">
+                🎁
               </div>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">Win Free Gifts</span>
             </div>
 
-            {/* Columns 2: Trending / Trading Products */}
-            <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl p-5 border border-slate-200/60 dark:border-white/5 space-y-4 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.05] pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="bg-red-500/10 p-1.5 rounded-lg text-red-500">
-                    <Flame className="w-4 h-4 text-red-500 animate-pulse" />
-                  </div>
-                  <div>
-                    <h4 className="font-display font-bold text-xs text-slate-800 dark:text-slate-100">
-                      Trending Products
-                    </h4>
-                    <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium">ট্রেডিং ও জনপ্রিয় প্রোডাক্টস</p>
-                  </div>
-                </div>
+            {/* Quick Button 2: Use Copilot */}
+            <div 
+              onClick={() => onSwitchTab("chat")}
+              className="cursor-pointer flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-950/20 transition group"
+            >
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform text-lg">
+                💬
               </div>
-
-              <div className="space-y-3.5">
-                {trendingProducts.map((p) => (
-                  <div 
-                    key={`shop-trend-${p.id}`}
-                    onClick={() => setSelectedProduct(p)}
-                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/40 transition border border-transparent hover:border-slate-100 dark:hover:border-white/5 group cursor-pointer"
-                  >
-                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-950/70 shrink-0 border border-slate-200/50 dark:border-white/5">
-                      <img 
-                        src={p.images[0]} 
-                        alt={p.title} 
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
-                      />
-                      <div className="absolute top-0 right-0 bg-red-550 text-white text-[7px] font-extrabold px-1 py-0.5 rounded-bl shadow-xs">
-                        HOT
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h5 className="text-[11.5px] font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-theme-primary transition-colors">
-                        {p.title}
-                      </h5>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="flex items-center gap-0.5 text-amber-500">
-                          <Star className="w-2.5 h-2.5 fill-amber-500" />
-                          <span className="text-[9px] font-bold font-mono">{p.rating}</span>
-                        </div>
-                        <span className="text-slate-350 dark:text-slate-700 text-[10px]">•</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono">
-                          {p.salesCount} sold
-                        </span>
-                      </div>
-                      <div className="text-[10.5px] font-bold text-slate-900 dark:text-slate-105 font-mono mt-0.5">
-                        ৳{p.price.toLocaleString()}
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedProduct(p);
-                      }}
-                      className="py-1 px-2.5 text-[9.5px] bg-slate-100 hover:bg-red-500 dark:bg-slate-800 hover:dark:bg-red-650 text-slate-700 hover:text-white dark:text-slate-200 hover:dark:text-white rounded-md font-bold transition duration-150 cursor-pointer active:scale-95 whitespace-nowrap"
-                    >
-                      View
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">Live Support</span>
             </div>
 
-            {/* Columns 3: Best Selling Products */}
-            <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl p-5 border border-slate-200/60 dark:border-white/5 space-y-4 shadow-2xs">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/[0.05] pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="bg-amber-500/10 p-1.5 rounded-lg text-amber-500">
-                    <Trophy className="w-4 h-4 text-amber-500 animate-bounce" />
-                  </div>
-                  <div>
-                    <h4 className="font-display font-bold text-xs text-slate-800 dark:text-slate-100">
-                      Best Selling Products
-                    </h4>
-                    <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium">সেরা বিক্রিত ও চাহিদাপূর্ণ পণ্য</p>
-                  </div>
-                </div>
+            {/* Quick Button 3: Vouchers Checker */}
+            <div 
+              onClick={() => {
+                const inputEl = document.getElementById("shop-coupon-input-field");
+                if (inputEl) inputEl.focus();
+                alert("Apply coupons during checkout in the bag drawer!");
+              }}
+              className="cursor-pointer flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-950/20 transition group"
+            >
+              <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform text-lg">
+                🎟️
               </div>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">Vouchers</span>
+            </div>
 
-              <div className="space-y-3.5">
-                {bestSellers.map((p) => (
-                  <div 
-                    key={`shop-bestsell-${p.id}`}
-                    onClick={() => setSelectedProduct(p)}
-                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/40 transition border border-transparent hover:border-slate-100 dark:hover:border-white/5 group cursor-pointer"
-                  >
-                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-950/70 shrink-0 border border-slate-200/50 dark:border-white/5">
-                      <img 
-                        src={p.images[0]} 
-                        alt={p.title} 
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
-                      />
-                      <div className="absolute top-0 right-0 bg-amber-500 text-white text-[7px] font-extrabold px-1 py-0.5 rounded-bl shadow-xs">
-                        BEST
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h5 className="text-[11.5px] font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-amber-500 transition-colors">
-                        {p.title}
-                      </h5>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="flex items-center gap-0.5 text-amber-500">
-                          <Star className="w-2.5 h-2.5 fill-amber-500" />
-                          <span className="text-[9px] font-bold font-mono">{p.rating}</span>
-                        </div>
-                        <span className="text-slate-350 dark:text-slate-700 text-[10px]">•</span>
-                        <span className="text-[9px] text-amber-600 dark:text-amber-500 font-bold font-mono">
-                          {p.salesCount} sold
-                        </span>
-                      </div>
-                      <div className="text-[10.5px] font-bold text-slate-900 dark:text-slate-105 font-mono mt-0.5">
-                        ৳{p.price.toLocaleString()}
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedProduct(p);
-                      }}
-                      className="py-1 px-2.5 text-[9.5px] bg-slate-100 hover:bg-amber-550 dark:bg-slate-800 hover:dark:bg-amber-600 text-slate-705 hover:text-white dark:text-slate-200 hover:dark:text-white rounded-md font-bold transition duration-150 cursor-pointer active:scale-95 whitespace-nowrap"
-                    >
-                      View
-                    </button>
-                  </div>
-                ))}
+            {/* Quick Button 4: Low Price bargains */}
+            <div 
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("spices");
+                alert("🌶️ Budget Spices / bargains matching categories selected!");
+              }}
+              className="cursor-pointer flex flex-col items-center text-center space-y-1.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-950/20 transition group"
+            >
+              <div className="w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-500 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform text-lg">
+                🏷️
               </div>
+              <span className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300">Low Price</span>
             </div>
 
           </div>
 
-          <div className="flex items-center gap-2 pt-4 border-b border-slate-100 dark:border-white/[0.05] pb-2">
-            <span className="bg-theme-light text-theme-primary p-1 rounded-lg">
-              <ShoppingBag className="w-3.5 h-3.5 text-theme-primary" />
-            </span>
-            <h3 className="font-display font-medium text-[10.5px] text-slate-600 dark:text-slate-300 uppercase tracking-widest">
-              All Catalogue Items • সকল প্রোডাক্টস
-            </h3>
+          {/* 📬 3. Quick Promo Coupon Verification Bar */}
+          <div className="glass-panel rounded-xl p-3 border border-slate-200/50 dark:border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="p-1 bg-rose-500/10 text-rose-500 rounded">
+                <Tag className="w-4 h-4 text-rose-500" />
+              </span>
+              <div>
+                <span className="text-[10.5px] sm:text-xs font-bold text-slate-800 dark:text-slate-200">Verify Active Global Coupons • কুপন চেক করুন</span>
+                <span className="hidden sm:block text-[9.5px] text-slate-400 dark:text-slate-500 leading-none">Type SAYED77 or WELCOME100 in cashier for absolute reduction</span>
+              </div>
+            </div>
+            
+            <form onSubmit={handleVerifyCoupon} className="flex gap-2 w-full sm:w-auto">
+              <input 
+                id="shop-promo-code-input"
+                type="text" 
+                placeholder="PROMO CODE (SAYED77)" 
+                className="bg-white/65 dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs uppercase tracking-wider font-bold w-full sm:w-44 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-250"
+                value={quickPromoCode}
+                onChange={e => setQuickPromoCode(e.target.value)}
+              />
+              <button 
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-1 px-3.5 rounded-lg shrink-0 transition cursor-pointer"
+              >
+                Validate
+              </button>
+            </form>
           </div>
+          {promoMessage && (
+            <div className="text-[10.5px] font-bold p-2 bg-slate-100 dark:bg-slate-950 border border-slate-250 dark:border-white/5 rounded-lg text-slate-705 dark:text-slate-300 animate-fade-in">
+              {promoMessage}
+            </div>
+          )}
+
+          {/* 🛡️ 5. Market Trust Badges Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-white/40 dark:bg-slate-950/20 p-3 rounded-2xl border border-slate-200/40 dark:border-white/5">
+            <div className="flex items-center gap-2.5 p-1 rounded-xl">
+              <span className="p-2 rounded-lg bg-emerald-500/15 text-emerald-500">
+                <Truck className="w-4 h-4 text-emerald-500" />
+              </span>
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block leading-none">SHIPPING</span>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">২৪-৪৮ ঘণ্টার ডেলিভারি</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 p-1 rounded-xl">
+              <span className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+                <Shield className="w-4 h-4 text-indigo-550" />
+              </span>
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block leading-none">QUALITY</span>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">শতভাগ জেনুইন প্রোডাক্টস</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 p-1 rounded-xl">
+              <span className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                <CreditCard className="w-4 h-4 text-amber-550" />
+              </span>
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block leading-none">PAYMENT</span>
+                <span className="text-[11px] font-bold text-slate-705 dark:text-slate-300">বিকাশ ও রকেট সুরক্ষা</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 p-1 rounded-xl">
+              <span className="p-2 rounded-lg bg-red-500/10 text-red-500">
+                <Trophy className="w-4 h-4" />
+              </span>
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block leading-none">SECURITY</span>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">পেমেন্ট এসক্রো প্রটেকশন</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       )}
 
-      {/* Product Catalog grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {/* 🌟 6. New Arrivals, Trending & Best Selling Product Sections */}
+      {selectedCategory === "all" && searchQuery === "" && (
+        <div className="space-y-6 animate-fade-in relative z-10">
+          
+          {/* Section 1: New Arrivals Track */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.04] p-4 rounded-2xl relative overflow-hidden shadow-xs space-y-3.5">
+            <div className="flex justify-between items-center pb-1 border-b border-slate-100 dark:border-white/[0.05]">
+              <div className="flex items-center gap-2">
+                <span className="p-1 px-2 text-[10px] bg-emerald-500/10 text-emerald-500 rounded-md font-black uppercase tracking-wider animate-pulse">
+                  NEW
+                </span>
+                <h4 className="font-display font-black text-xs sm:text-sm text-slate-800 dark:text-slate-100 uppercase tracking-tight flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-emerald-500" />
+                  New Arrival Products • নতুন আগমন
+                </h4>
+              </div>
+              <button
+                onClick={() => alert("Redirecting to all New Arrivals catalog!")}
+                className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:opacity-85 flex items-center gap-1 transition cursor-pointer"
+              >
+                View More <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="flex gap-3.5 overflow-x-auto pb-1.5 scrollbar-thin snap-x lg:grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2">
+              {newArrivals.map((p) => {
+                const pct = p.oldPrice ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 25;
+                return (
+                  <div
+                    key={`shop-new-carousel-${p.id}`}
+                    onClick={() => setSelectedProduct(p)}
+                    className="w-40 sm:w-44 lg:w-full shrink-0 snap-center bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100 dark:border-white/[0.03] hover:border-emerald-300 dark:hover:border-emerald-500/30 rounded-xl p-2 cursor-pointer transition-all duration-350 hover:shadow-sm hover:scale-101 group"
+                  >
+                    <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-white dark:bg-slate-950 flex items-center justify-center">
+                      <img
+                        src={p.images[0]}
+                        alt={p.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-xs py-1 text-center font-display font-bold text-[9px] text-white tracking-wide">
+                        Only {p.stockCount > 0 ? (p.stockCount > 10 ? p.stockCount - 3 : p.stockCount) : 4} left
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2 space-y-1">
+                      <h5 className="text-[11px] sm:text-[11.5px] font-bold text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-emerald-505 leading-tight">
+                        {p.title}
+                      </h5>
+                      <div className="flex items-center justify-between text-[9px] text-slate-450 dark:text-slate-550">
+                        <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                          ★ <span className="font-mono">{p.rating}</span>
+                        </span>
+                        <span>{p.salesCount || 12} sold</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[13px] sm:text-[14.5px] font-black text-[#f85606] font-mono leading-none">
+                          ৳{p.price.toLocaleString()}
+                        </span>
+                        <span className="bg-[#ff4757]/10 text-[#ff4757] dark:bg-[#ff4757]/20 text-[8.5px] font-black px-1.5 py-0.5 rounded-sm shrink-0">
+                          -{pct}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 2: Trending Collection Track */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.04] p-4 rounded-2xl relative overflow-hidden shadow-xs space-y-3.5">
+            <div className="flex justify-between items-center pb-1 border-b border-slate-100 dark:border-white/[0.05]">
+              <div className="flex items-center gap-2">
+                <span className="p-1 px-2 text-[10px] bg-red-500/10 text-red-500 rounded-md font-black uppercase tracking-wider animate-pulse">
+                  HOT
+                </span>
+                <h4 className="font-display font-black text-xs sm:text-sm text-slate-800 dark:text-slate-100 uppercase tracking-tight flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-red-500 animate-pulse" />
+                  Trending Products • জনপ্রিয় পণ্য
+                </h4>
+              </div>
+              <button
+                onClick={() => alert("Redirecting to all Trending Products catalog!")}
+                className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:opacity-85 flex items-center gap-1 transition cursor-pointer"
+              >
+                View More <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="flex gap-3.5 overflow-x-auto pb-1.5 scrollbar-thin snap-x lg:grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2">
+              {trendingProducts.map((p) => {
+                const pct = p.oldPrice ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 30;
+                return (
+                  <div
+                    key={`shop-trend-carousel-${p.id}`}
+                    onClick={() => setSelectedProduct(p)}
+                    className="w-40 sm:w-44 lg:w-full shrink-0 snap-center bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100 dark:border-white/[0.03] hover:border-emerald-300 dark:hover:border-emerald-500/30 rounded-xl p-2 cursor-pointer transition-all duration-350 hover:shadow-sm hover:scale-101 group"
+                  >
+                    <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-white dark:bg-slate-950 flex items-center justify-center">
+                      <img
+                        src={p.images[0]}
+                        alt={p.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-xs py-1 text-center font-display font-bold text-[9px] text-white tracking-wide">
+                        Only {p.stockCount > 0 ? (p.stockCount > 8 ? p.stockCount - 3 : p.stockCount) : 3} left
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2 space-y-1">
+                      <h5 className="text-[11px] sm:text-[11.5px] font-bold text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-emerald-605 leading-tight">
+                        {p.title}
+                      </h5>
+                      <div className="flex items-center justify-between text-[9px] text-slate-450 dark:text-slate-550">
+                        <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                          ★ <span className="font-mono">{p.rating}</span>
+                        </span>
+                        <span>{p.salesCount || 105} sold</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[13px] sm:text-[14.5px] font-black text-[#f85606] font-mono leading-none">
+                          ৳{p.price.toLocaleString()}
+                        </span>
+                        <span className="bg-[#ff4757]/10 text-[#ff4757] dark:bg-[#ff4757]/20 text-[8.5px] font-black px-1.5 py-0.5 rounded-sm shrink-0">
+                          -{pct}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 3: Best Sellers Track */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.04] p-4 rounded-2xl relative overflow-hidden shadow-xs space-y-3.5">
+            <div className="flex justify-between items-center pb-1 border-b border-slate-100 dark:border-white/[0.05]">
+              <div className="flex items-center gap-2">
+                <span className="p-1 px-2 text-[10px] bg-amber-550/10 text-amber-500 rounded-md font-black uppercase tracking-wider animate-pulse">
+                  BEST
+                </span>
+                <h4 className="font-display font-black text-xs sm:text-sm text-slate-800 dark:text-slate-100 uppercase tracking-tight flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4 text-amber-500" />
+                  Best Selling Products • সেরা বিক্রীত পণ্য
+                </h4>
+              </div>
+              <button
+                onClick={() => alert("Redirecting to all Best Sellers catalog!")}
+                className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:opacity-85 flex items-center gap-1 transition cursor-pointer"
+              >
+                View More <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="flex gap-3.5 overflow-x-auto pb-1.5 scrollbar-thin snap-x lg:grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2">
+              {bestSellers.map((p) => {
+                const pct = p.oldPrice ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 31;
+                return (
+                  <div
+                    key={`shop-bestsell-carousel-${p.id}`}
+                    onClick={() => setSelectedProduct(p)}
+                    className="w-40 sm:w-44 lg:w-full shrink-0 snap-center bg-slate-50/50 dark:bg-slate-950/30 border border-slate-100 dark:border-white/[0.03] hover:border-emerald-300 dark:hover:border-emerald-500/30 rounded-xl p-2 cursor-pointer transition-all duration-350 hover:shadow-sm hover:scale-101 group"
+                  >
+                    <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-white dark:bg-slate-950 flex items-center justify-center">
+                      <img
+                        src={p.images[0]}
+                        alt={p.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-xs py-1 text-center font-display font-bold text-[9px] text-white tracking-wide">
+                        Only {p.stockCount > 0 ? (p.stockCount > 5 ? p.stockCount - 2 : p.stockCount) : 2} left
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2 space-y-1">
+                      <h5 className="text-[11px] sm:text-[11.5px] font-bold text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-emerald-605 leading-tight">
+                        {p.title}
+                      </h5>
+                      <div className="flex items-center justify-between text-[9px] text-slate-450 dark:text-slate-550">
+                        <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                          ★ <span className="font-mono">{p.rating}</span>
+                        </span>
+                        <span>{p.salesCount || 184} sold</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[13px] sm:text-[14.5px] font-black text-[#f85606] font-mono leading-none">
+                          ৳{p.price.toLocaleString()}
+                        </span>
+                        <span className="bg-[#ff4757]/10 text-[#ff4757] dark:bg-[#ff4757]/20 text-[8.5px] font-black px-1.5 py-0.5 rounded-sm shrink-0">
+                          -{pct}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 pt-4 border-b border-slate-100 dark:border-white/[0.05] pb-2">
+        <span className="bg-theme-light text-theme-primary p-1 rounded-lg">
+          <ShoppingBag className="w-3.5 h-3.5 text-theme-primary" />
+        </span>
+        <h3 className="font-display font-medium text-[10.5px] text-slate-600 dark:text-slate-300 uppercase tracking-widest">
+          All Catalogue Items • সকল প্রোডাক্টস
+        </h3>
+      </div>
+
+      {/* Product Catalog Grid with a gorgeous responsive Amazon/Daraz 2-column mobile layout */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
         {filteredProducts.map(product => {
           // Find associated store details
           const store = VENDOR_STORES.find(s => s.id === product.vendorStoreId);
+          const percentDiscount = product.oldPrice 
+            ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) 
+            : null;
+
           return (
             <div 
               key={product.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col justify-between group"
+              onClick={() => setSelectedProduct(product)}
+              className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.06] rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-emerald-500/30 transition-all duration-200 flex flex-col justify-between group cursor-pointer relative"
             >
               {/* Product Card Image Box */}
-              <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950">
+              <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950/45">
                 <img 
                   src={product.images[0]} 
                   alt={product.title} 
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                  className="w-full h-full object-cover group-hover:scale-104 transition duration-300"
                 />
                 
-                {/* Sale and Vendor badging */}
-                <span className="absolute top-2.5 left-2.5 bg-rose-500 text-white font-mono text-[9px] font-bold px-2 py-0.5 rounded-md">
-                  ৳{product.price}
-                </span>
+                {/* Percent Discount Badge */}
+                {percentDiscount && (
+                  <span className="absolute top-2 left-2 bg-red-500 text-white font-sans text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-md shadow-sm">
+                    {percentDiscount}% OFF
+                  </span>
+                )}
+
+                {/* Free Shipping Tag simulation like Daraz */}
+                {product.price > 1200 && (
+                  <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[8.5px] font-extrabold px-1.5 py-0.5 rounded-md tracking-wider flex items-center gap-0.5 shadow-sm">
+                    FREE
+                  </span>
+                )}
 
                 {store && (
-                  <span className="absolute bottom-2.5 left-2.5 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
-                    Store: {store.storeName}
+                  <span className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-xs text-white text-[8.5px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                    🏬 {store.storeName.replace(" Store", "")}
                   </span>
                 )}
               </div>
 
-              {/* Card Meta Content section */}
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+              {/* Card Meta Content section - optimized dense margins */}
+              <div className="p-2.5 sm:p-3.5 flex-1 flex flex-col justify-between space-y-2">
                 <div className="space-y-1">
-                  <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-xs tracking-tight line-clamp-1 truncate flex-1 leading-no">
+                  <div className="flex justify-between items-start gap-1">
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-150 text-[11.5px] sm:text-xs leading-tight tracking-tight line-clamp-2 h-8 sm:h-9 text-ellipsis overflow-hidden group-hover:text-emerald-650 transition-colors">
                       {product.title}
                     </h3>
-                    <div className="flex items-center text-amber-500 shrink-0 text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                      <Star className="w-3 h-3 fill-current mr-0.5" />
-                      {product.rating}
-                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-400 line-clamp-2 h-8 leading-snug">
-                    {product.description}
-                  </p>
+                  
+                  {/* Rating + Sold info bar */}
+                  <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] text-slate-455 dark:text-slate-500 font-medium">
+                    <div className="flex items-center text-amber-500">
+                      <Star className="w-3 h-3 fill-current mr-0.5" />
+                      <span className="font-bold">{product.rating}</span>
+                    </div>
+                    <span>•</span>
+                    <span>{product.salesCount} sold</span>
+                  </div>
                 </div>
 
                 {/* Pricing and Action click buttons */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="font-mono">
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">৳{product.price}</span>
+                <div className="flex items-end justify-between pt-1.5 border-t border-slate-100 dark:border-white/[0.04]">
+                  <div>
                     {product.oldPrice && (
-                      <span className="text-[10px] text-slate-400 line-through ml-1.5">৳{product.oldPrice}</span>
+                      <span className="text-[10px] text-slate-400 line-through block leading-none mb-0.5">৳{product.oldPrice}</span>
                     )}
+                    <span className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">৳{product.price.toLocaleString()}</span>
                   </div>
                   <button
-                    onClick={() => setSelectedProduct(product)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium py-1.5 px-3 rounded-lg shadow-sm hover:shadow-md transition-all uppercase tracking-normal"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedProduct(product);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[10.5px] font-bold py-1 px-2.5 sm:py-1.5 sm:px-3 rounded-lg shadow-xs hover:shadow-md transition-all whitespace-nowrap cursor-pointer"
                   >
-                    View Details
+                    Details
                   </button>
                 </div>
               </div>
@@ -936,7 +1246,7 @@ export default function CustomerShop({
                   </div>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded border border-slate-100 dark:border-slate-900 border-dashed space-y-1">
+                <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded border border-slate-150 dark:border-slate-900 border-dashed space-y-1.5">
                   <div className="flex justify-between font-mono text-[10px]">
                     <span>Item Value:</span>
                     <span>৳{cartSubtotal}</span>
@@ -948,6 +1258,10 @@ export default function CustomerShop({
                   <div className="flex justify-between font-mono font-bold text-xs text-slate-800 dark:text-slate-200 pt-1 border-t border-slate-200">
                     <span>Platform Payable Amount:</span>
                     <span className="text-emerald-600">৳{grandTotal}</span>
+                  </div>
+                  <div className="flex justify-between font-medium text-[10px] text-indigo-650 dark:text-indigo-400 pt-1.5 border-t border-slate-200/50">
+                    <span className="flex items-center gap-1">💳 Simulated Account Balance:</span>
+                    <span className="font-bold">৳{currentUser?.walletBalance?.toLocaleString()}</span>
                   </div>
                 </div>
 

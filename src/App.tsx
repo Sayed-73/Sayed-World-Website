@@ -79,10 +79,11 @@ export default function App() {
   });
 
   // Multi-panel focus states
-  const [activeTab, setActiveTab] = useState<"home" | "shop" | "vendor" | "admin" | "chat" | "roadmap">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "shop" | "vendor" | "admin" | "chat" | "roadmap">("shop");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>(UserRole.CUSTOMER);
+  const [showSandboxBar, setShowSandboxBar] = useState<boolean>(false);
 
   // Core synchronized relational states
   const [currentProducts, setCurrentProducts] = useState<Product[]>(PRODUCTS);
@@ -250,7 +251,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#080d1a] text-slate-800 dark:text-slate-200 transition-colors duration-250 flex flex-col font-sans relative">
+    <div className="min-h-screen bg-slate-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] dark:bg-[#080d1a] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] text-slate-800 dark:text-slate-200 transition-colors duration-250 flex flex-col font-sans relative">
       
       {/* 📁 Global Sticky Hover Categories Floating Action Button */}
       <button
@@ -386,77 +387,79 @@ export default function App() {
         <div className="absolute top-[40%] left-[30%] w-[35%] h-[35%] rounded-full bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px]" />
       </div>
 
-      {/* Dynamic Master Role selector rails */}
-      <div className="bg-slate-900/90 dark:bg-slate-950/80 border-b border-slate-800 dark:border-white/[0.05] backdrop-blur-md px-4 py-2 flex flex-col sm:flex-row justify-between items-center text-xs gap-3 z-50 relative">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-theme-primary animate-ping shrink-0" />
-          <span className="text-slate-300 font-medium">Sayed-World Role Playground Switcher:</span>
-          {Object.values(UserRole).map(role => (
+      {/* Dynamic Master Role selector rails (Collapsible for a premium clean customer view) */}
+      {showSandboxBar && (
+        <div className="bg-slate-900/90 dark:bg-slate-950/80 border-b border-slate-800 dark:border-white/[0.05] backdrop-blur-md px-4 py-2 flex flex-col sm:flex-row justify-between items-center text-xs gap-3 z-50 relative">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-theme-primary animate-ping shrink-0" />
+            <span className="text-slate-300 font-medium">Sayed-World Role Playground Switcher:</span>
+            {Object.values(UserRole).map(role => (
+              <button
+                key={role}
+                onClick={() => handleRoleChange(role)}
+                className={`px-2.5 py-1 rounded text-[10.5px] font-bold transition flex items-center gap-1 ${
+                  currentUserRole === role 
+                    ? "bg-theme-primary text-white shadow" 
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-300"
+                }`}
+              >
+                {role === UserRole.SUPER_ADMIN && <ShieldCheck className="w-3.5 h-3.5" />}
+                {role === UserRole.VENDOR && <Building className="w-3.5 h-3.5" />}
+                {role === UserRole.CUSTOMER && <ShoppingBag className="w-3.5 h-3.5" />}
+                <span>{role}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Local time settings coordinates matches */}
+          <div className="flex flex-wrap items-center gap-4 text-slate-405 font-mono text-[10px]">
+            <div>Dhaka (UTC): <span className="font-bold text-slate-200">{UTCTimeString}</span></div>
+            
+            {/* Design System Style Engine Switcher */}
+            <div className="flex items-center gap-1 bg-slate-800 p-1 rounded border border-slate-700">
+              <span className="text-[9px] text-slate-400 font-bold px-1 uppercase leading-none">Style:</span>
+              <select
+                value={designStyle}
+                onChange={(e) => setDesignStyle(e.target.value as any)}
+                className="bg-slate-900 border border-slate-700 rounded text-[9.5px] py-0.5 px-1.5 font-sans font-bold text-slate-200 focus:outline-none focus:ring-1/2 focus:ring-theme-primary cursor-pointer uppercase"
+              >
+                <option value="glass">🔮 Classic Glass</option>
+                <option value="cyber">💻 Cyber Slate</option>
+                <option value="silk">🌸 macOS Silk</option>
+                <option value="brutalist">⚡ Brutalist Grid</option>
+              </select>
+            </div>
+
+            {/* Theme custom picker element */}
+            <div className="flex items-center gap-1.5 bg-slate-800 p-1 rounded border border-slate-700">
+              <span className="text-[9px] text-slate-400 font-bold px-1 uppercase leading-none">Color:</span>
+              {(Object.keys(THEMES) as Array<keyof typeof THEMES>).map((themeKey) => {
+                const th = THEMES[themeKey];
+                const isSelected = selectedTheme === themeKey;
+                return (
+                  <button
+                    key={themeKey}
+                    onClick={() => setSelectedTheme(themeKey)}
+                    title={th.name}
+                    className={`w-3.5 h-3.5 rounded-full transition-all duration-150 transform hover:scale-125 focus:outline-none ${
+                      isSelected ? "ring-2 ring-white scale-110" : "opacity-60 hover:opacity-100"
+                    }`}
+                    style={{ backgroundColor: th.primary }}
+                  />
+                );
+              })}
+            </div>
+
             <button
-              key={role}
-              onClick={() => handleRoleChange(role)}
-              className={`px-2.5 py-1 rounded text-[10.5px] font-bold transition flex items-center gap-1 ${
-                currentUserRole === role 
-                  ? "bg-theme-primary text-white shadow" 
-                  : "bg-slate-800 hover:bg-slate-700 text-slate-300"
-              }`}
+              onClick={() => setThemeMode(themeMode === "light" ? "dark" : "light")}
+              className="p-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1"
             >
-              {role === UserRole.SUPER_ADMIN && <ShieldCheck className="w-3.5 h-3.5" />}
-              {role === UserRole.VENDOR && <Building className="w-3.5 h-3.5" />}
-              {role === UserRole.CUSTOMER && <ShoppingBag className="w-3.5 h-3.5" />}
-              <span>{role}</span>
+              {themeMode === "light" ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+              <span className="text-[9px] uppercase tracking-wider font-sans font-bold">{themeMode} Toggle</span>
             </button>
-          ))}
-        </div>
-
-        {/* Local time settings coordinates matches */}
-        <div className="flex flex-wrap items-center gap-4 text-slate-405 font-mono text-[10px]">
-          <div>Dhaka (UTC): <span className="font-bold text-slate-200">{UTCTimeString}</span></div>
-          
-          {/* Design System Style Engine Switcher */}
-          <div className="flex items-center gap-1 bg-slate-800 p-1 rounded border border-slate-700">
-            <span className="text-[9px] text-slate-400 font-bold px-1 uppercase leading-none">Style:</span>
-            <select
-              value={designStyle}
-              onChange={(e) => setDesignStyle(e.target.value as any)}
-              className="bg-slate-900 border border-slate-700 rounded text-[9.5px] py-0.5 px-1.5 font-sans font-bold text-slate-200 focus:outline-none focus:ring-1/2 focus:ring-theme-primary cursor-pointer uppercase"
-            >
-              <option value="glass">🔮 Classic Glass</option>
-              <option value="cyber">💻 Cyber Slate</option>
-              <option value="silk">🌸 macOS Silk</option>
-              <option value="brutalist">⚡ Brutalist Grid</option>
-            </select>
           </div>
-
-          {/* Theme custom picker element */}
-          <div className="flex items-center gap-1.5 bg-slate-800 p-1 rounded border border-slate-700">
-            <span className="text-[9px] text-slate-400 font-bold px-1 uppercase leading-none">Color:</span>
-            {(Object.keys(THEMES) as Array<keyof typeof THEMES>).map((themeKey) => {
-              const th = THEMES[themeKey];
-              const isSelected = selectedTheme === themeKey;
-              return (
-                <button
-                  key={themeKey}
-                  onClick={() => setSelectedTheme(themeKey)}
-                  title={th.name}
-                  className={`w-3.5 h-3.5 rounded-full transition-all duration-150 transform hover:scale-125 focus:outline-none ${
-                    isSelected ? "ring-2 ring-white scale-110" : "opacity-60 hover:opacity-100"
-                  }`}
-                  style={{ backgroundColor: th.primary }}
-                />
-              );
-            })}
-          </div>
-
-          <button
-            onClick={() => setThemeMode(themeMode === "light" ? "dark" : "light")}
-            className="p-1 px-1.5 rounded bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1"
-          >
-            {themeMode === "light" ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-            <span className="text-[9px] uppercase tracking-wider font-sans font-bold">{themeMode} Toggle</span>
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Primary Header block */}
       <header className="glass-panel border-b border-slate-200/50 dark:border-white/15 px-6 py-4 sticky top-0 z-40 flex justify-between items-center relative">
@@ -486,17 +489,21 @@ export default function App() {
             <span className="text-[10px] text-slate-400 font-medium font-mono">{currentUser.email}</span>
           </div>
 
-          <div className="glass-card p-2 rounded-xl border border-slate-203 dark:border-white/10 flex items-center gap-4 text-xs">
-            <div className="font-mono text-center px-1">
-              <span className="text-[9px] block text-slate-400 dark:text-slate-500 font-semibold tracking-wider font-sans leading-none pb-0.5">Wallet</span>
-              <span className="font-bold text-theme-primary">৳{currentUser.walletBalance.toLocaleString()}</span>
-            </div>
-            <div className="w-px bg-slate-200 dark:bg-white/10 h-8" />
-            <div className="font-mono text-center px-1">
-              <span className="text-[9px] block text-slate-400 dark:text-slate-500 font-semibold tracking-wider font-sans leading-none pb-0.5">Coins</span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400">{currentUser.loyaltyPoints} PTS</span>
-            </div>
-          </div>
+
+
+          {/* Quick Demo Settings Toggle Button */}
+          <button
+            onClick={() => setShowSandboxBar(!showSandboxBar)}
+            className={`p-2 rounded-xl border flex items-center gap-1.5 transition-all text-xs font-bold font-sans ${
+              showSandboxBar 
+                ? "bg-theme-primary text-white border-transparent"
+                : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-theme-primary/30 text-slate-700 dark:text-slate-350"
+            }`}
+            title="Toggle Developer & Demo Sandbox Panel"
+          >
+            <Settings className={`w-3.5 h-3.5 ${showSandboxBar ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Admin Switcher</span>
+          </button>
         </div>
       </header>
 
@@ -509,7 +516,18 @@ export default function App() {
           { id: "vendor", label: "Vendor Dashboard (Seller Panel)", icon: Building, roleLocked: UserRole.VENDOR },
           { id: "admin", label: "Super Admin Control Panel", icon: ShieldCheck, roleLocked: UserRole.SUPER_ADMIN },
           { id: "chat", label: "Live Chat Rooms & AI Copilot", icon: MessageSquare, count: 1 }
-        ].map(tab => {
+        ].filter(tab => {
+          if (currentUserRole === UserRole.CUSTOMER) {
+            // A regular customer only has access to customer shop and live customer support
+            return tab.id === "shop" || tab.id === "chat";
+          }
+          if (currentUserRole === UserRole.VENDOR) {
+            // A vendor can manage their inventory/store and buy/interact as a customer
+            return tab.id === "shop" || tab.id === "vendor" || tab.id === "chat";
+          }
+          // Super admin gets deep tech access to specs, roadmaps, and global configurations
+          return true;
+        }).map(tab => {
           const Icon = tab.icon;
           
           // Verify role permissions dynamically to show panel badges or locks
@@ -585,6 +603,15 @@ export default function App() {
             currentUser={currentUser}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
+            designStyle={designStyle}
+            onSwitchDesignStyle={(style) => setDesignStyle(style)}
+            onAddFunds={(amount) => {
+              setCurrentUser(prev => ({
+                ...prev,
+                walletBalance: prev.walletBalance + amount
+              }));
+            }}
+            onSwitchTab={(tabId) => setActiveTab(tabId)}
           />
         )}
 
@@ -603,6 +630,22 @@ export default function App() {
             vendorStores={currentStores}
             onApproveStore={handleNewStoreApprovedByAdmin}
             orders={registeredOrders}
+            designStyle={designStyle}
+            onSwitchDesignStyle={(style) => setDesignStyle(style)}
+            onAddFunds={(amount) => {
+              setCurrentUser(prev => ({
+                ...prev,
+                walletBalance: prev.walletBalance + amount
+              }));
+            }}
+            onSwitchTab={(tabId) => setActiveTab(tabId)}
+            currentUser={currentUser}
+            onAddCoins={(amount) => {
+              setCurrentUser(prev => ({
+                ...prev,
+                loyaltyPoints: prev.loyaltyPoints + amount
+              }));
+            }}
           />
         )}
 
