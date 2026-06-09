@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global safety net - default deny everything
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions for Attribute-Based Access Control (ABAC)
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+    
+    function isOwner(userId) { 
+      return isSignedIn() && request.auth.uid == userId; 
+    }
+
+    function incoming() { 
+      return request.resource.data; 
+    }
+
+    function existing() { 
+      return resource.data; 
+    }
+
+    // Strict validator for users collection schema
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'role', 'walletBalance', 'loyaltyPoints']) &&
+             data.keys().size() == 6 &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.role is string && (data.role == "Super Admin" || data.role == "Vendor/Seller" || data.role == "Customer" || data.role == "Support Staff" || data.role == "Delivery Manager") &&
+             data.walletBalance is number && data.walletBalance >= 0 &&
+             data.loyaltyPoints is number && data.loyaltyPoints >= 0;
+    }
+
+    // Users Collection rules matched securely
+    match /users/{userId} {
+      // Direct READ only allowed by the owner of the account to protect PII
+      allow get: if isOwner(userId);
+      
+      // Prohibit blanket collection queries (no list)
+      allow list: if false;
+
+      // CREATE is allowed if the user is logging in / registering themselves and schema matches
+      allow create: if isOwner(userId) && isValidUser(incoming());
+
+      // UPDATE permitted for changing properties like balances or points, preserving immutable fields
+      allow update: if isOwner(userId) && 
+                       isValidUser(incoming()) &&
+                       incoming().id == existing().id &&
+                       incoming().email == existing().email &&
+                       incoming().role == existing().role; // Block self-assigned roles escalation
+                       
+      // Users cannot delete their accounts via the client SDK
+      allow delete: if false;
+    }
+  }
+}

@@ -86,6 +86,127 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// AI Image Visual Product Search Endpoint
+app.post("/api/search-by-image", async (req, res) => {
+  try {
+    const { imageBase64, mimeType } = req.body;
+
+    if (!imageBase64) {
+      res.status(400).json({ error: "Image data (base64) is required" });
+      return;
+    }
+
+    const cleanMimeType = mimeType || "image/jpeg";
+    // Strip header prefix from base64 if present (e.g. "data:image/jpeg;base64,")
+    let rawBase64 = imageBase64;
+    if (imageBase64.includes("base64,")) {
+      rawBase64 = imageBase64.split("base64,")[1];
+    }
+
+    if (!ai) {
+      // Offline fallback simulation: matching based on basic heuristics or just simulating visual matching
+      // Let's match a premium casual watch, executive shirt, or leather derby shoe depending on user input or random
+      const catalog = [
+        {
+          id: "prod-shirt-skybuy",
+          title: "Summer Business Casual Executive Shirt",
+          category: "Fashion & Apparel",
+          explanation: "[Demo Offline Mode] We detected a premium casual shirt in your capture. Matching with our Summer Anti-wrinkle Premium Shirt."
+        },
+        {
+          id: "prod-derby-skybuy",
+          title: "Black Brown Square-Toe Leather Derby Shoes",
+          category: "Fashion & Apparel",
+          explanation: "[Demo Offline Mode] We detected a pair of elegant retro leather derby shoes. Matching with our Square-Toe Old Money Style footwear."
+        },
+        {
+          id: "prod-1",
+          title: "Sayed-Watch X Premium Smartwatch",
+          category: "Electronics & Gadgets",
+          explanation: "[Demo Offline Mode] We detected a modern circular or square premium watch face. Matching with our Wearable Smartwatch flagship."
+        }
+      ];
+
+      // Give a random match or match first item to keep it reliable and delightful
+      const randomMatch = catalog[Math.floor(Math.random() * catalog.length)];
+
+      res.json({
+        matchedIds: [randomMatch.id],
+        explanation: randomMatch.explanation,
+        detectedKeywords: randomMatch.title.toLowerCase() + ", offline, search scan",
+        detectedCategory: randomMatch.category,
+        isFallback: true
+      });
+      return;
+    }
+
+    const systemInstruction = `
+      You are an expert e-commerce visual search engine for "Sayed-World".
+      The user is uploading a photo or camera screenshot of a product they want to search in the catalog.
+      Your task is to analyze the image and find which of our catalog products (or categories) are the closest match.
+      
+      Our primary catalog product list is:
+      1. id: "prod-shirt-skybuy" | Name: Men's Short-Sleeved Business Casual Shirt (Sky Blue, Black, Pink, Wine)
+      2. id: "prod-derby-skybuy" | Name: Black Brown Square-Toe Leather Shoes Old Money Style Unisex Retro Formal Commuting Derby Shoes
+      3. id: "prod-1" | Name: Sayed-Watch X Premium Smartwatch
+      4. id: "prod-2" | Name: Premium Jamdani Sari - Handwoven Blue
+      5. id: "prod-3" | Name: Sylhet Sreemangal Organic Green Tea
+      6. id: "prod-4" | Name: Sayed-Pro Bassbuds Wireless
+      7. id: "prod-5" | Name: Traditional Brass Water Pitcher (Kalsi)
+      8. id: "prod-6" | Name: Surf Excel Liquid Detergent (1 Litre)
+      9. id: "prod-7" | Name: Xiaomi Handheld Rechargeable Portable Fan
+      10. id: "prod-8" | Name: Walton Direct Cool Refrigerator (220L)
+      11. id: "prod-9" | Name: Elegant Kashmiri Georgette Kurti Set
+      12. id: "prod-10" | Name: Simple Hydrating Moisturizing Face Wash
+      13. id: "prod-11" | Name: Modern Ergonomic Royal Relax Sofa
+      14. id: "prod-12" | Name: Sayed-Sound Premium ANC Pro Earphones
+      
+      Please provide the response in a VALID, STABLE JSON format with the following structure:
+      {
+        "matchedIds": ["prod-shirt-skybuy"], // Ranked list of closest product IDs from our list that match or look similar
+        "explanation": "We found a matching short-sleeved casual shirt. This looks highly similar to our anti-wrinkle Summer Slim-fit executive wear shirt.",
+        "detectedKeywords": "shirt, mens fashion, short sleeve, blue cotton",
+        "detectedCategory": "Fashion & Apparel"
+      }
+    `;
+
+    const imagePart = {
+      inlineData: {
+        mimeType: cleanMimeType,
+        data: rawBase64,
+      },
+    };
+
+    const textPart = {
+      text: "Analyze this image and identify the closest product from our database. Return a valid JSON object matching the requested schema.",
+    };
+
+    const result = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: [imagePart, textPart],
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        temperature: 0.2,
+      },
+    });
+
+    let rawText = result.text || "{}";
+    // Clean codeblock backticks if model generated them despite responseMimeType
+    if (rawText.includes("```json")) {
+      rawText = rawText.split("```json")[1].split("```")[0];
+    } else if (rawText.includes("```")) {
+      rawText = rawText.split("```")[1].split("```")[0];
+    }
+
+    const searchResponse = JSON.parse(rawText.trim());
+    res.json(searchResponse);
+  } catch (error: any) {
+    console.error("Error in /api/search-by-image:", error);
+    res.status(500).json({ error: error.message || "Internal Server Error" });
+  }
+});
+
 // Mock SSLCommerz Payment Initiation Endpoint
 app.post("/api/payment/initiate", (req, res) => {
   const { amount, phone, name, address, paymentMethod } = req.body;

@@ -9,13 +9,15 @@ import CustomerShop from "./components/CustomerShop";
 import VendorPanel from "./components/VendorPanel";
 import AdminPanel from "./components/AdminPanel";
 import HomePanel from "./components/HomePanel";
+import AuthModal from "./components/AuthModal";
+import { getSavedSession, logoutUnifiedUser } from "./firebase";
 
 // Icon imports
 import { 
   Building, ShieldCheck, ShoppingBag, MessageSquare, BookOpen, Layers,
   Compass, Coins, ShieldAlert, Cpu, Settings, Copy, Check, Menu, X, 
   Sun, Moon, Users, ShoppingCart, User as UserIcon, RefreshCw, BarChart3, HelpCircle,
-  Home, LayoutGrid, ChevronRight, Shirt, Smartphone, Sparkles, Gift, Palette, Sliders, Shield
+  Home, LayoutGrid, ChevronRight, Shirt, Smartphone, Sparkles, Gift, Palette, Sliders, Shield, LogOut
 } from "lucide-react";
 
 const THEMES = {
@@ -101,7 +103,7 @@ export default function App() {
   // Current active user model
   const [currentUser, setCurrentUser] = useState<User>({
     id: "user-sayed-77",
-    name: "Sayed Rahman",
+    name: "Sadul Islam",
     email: "saidulislam0400@gmail.com",
     role: UserRole.CUSTOMER,
     walletBalance: 45000, // starting wallet in BDT
@@ -110,6 +112,69 @@ export default function App() {
 
   // Track system date/time matching metadata coordinates
   const UTCTimeString = "2026-06-08 14:46:12 UTC";
+
+  // Check saved credential session on component mount (supports Gmail / Google SSO)
+  useEffect(() => {
+    const saved = getSavedSession();
+    if (saved) {
+      setCurrentUser({
+        id: saved.id,
+        name: saved.name,
+        email: saved.email,
+        role: saved.role as UserRole,
+        walletBalance: saved.walletBalance,
+        loyaltyPoints: saved.loyaltyPoints
+      });
+      setCurrentUserRole(saved.role as UserRole);
+      // Auto authorize sandbox access for Admin and Sellers
+      if (saved.role === "Super Admin" || saved.role === "Vendor/Seller") {
+        setDeveloperAccessGranted(true);
+        localStorage.setItem("sayed-world-developer-access", "true");
+      }
+    }
+  }, []);
+
+  const handleAuthSuccess = (user: any) => {
+    const matchedRole = user.role === "Super Admin" ? UserRole.SUPER_ADMIN : 
+                        user.role === "Vendor/Seller" ? UserRole.VENDOR : UserRole.CUSTOMER;
+    setCurrentUser({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: matchedRole,
+      walletBalance: user.walletBalance,
+      loyaltyPoints: user.loyaltyPoints
+    });
+    setCurrentUserRole(matchedRole);
+    setDeveloperAccessGranted(true);
+    localStorage.setItem("sayed-world-developer-access", "true");
+    
+    if (matchedRole === UserRole.SUPER_ADMIN) {
+      setActiveTab("admin");
+    } else if (matchedRole === UserRole.VENDOR) {
+      setActiveTab("vendor");
+    } else {
+      setActiveTab("shop");
+    }
+  };
+
+  const handleLogout = async () => {
+    await logoutUnifiedUser();
+    const guestUser: User = {
+      id: "user-sayed-77",
+      name: "Saidul Islam",
+      email: "saidulislam0400@gmail.com",
+      role: UserRole.CUSTOMER,
+      walletBalance: 45000,
+      loyaltyPoints: 120
+    };
+    setCurrentUser(guestUser);
+    setCurrentUserRole(UserRole.CUSTOMER);
+    setDeveloperAccessGranted(false);
+    localStorage.removeItem("sayed-world-developer-access");
+    setActiveTab("shop");
+    alert("👋 Logged out successfully! Session state cleared.");
+  };
 
   // Bootstrap Dark/Light Mode
   useEffect(() => {
@@ -267,8 +332,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] dark:bg-[#080d1a] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] text-slate-800 dark:text-slate-200 transition-colors duration-250 flex flex-col font-sans relative">
-      
+
+    // <div className="min-h-screen bg-slate-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] dark:bg-[#080d1a] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] text-slate-800 dark:text-slate-200 transition-colors duration-250 flex flex-col font-sans relative">
+    // background color change
+      <div className="min-h-screen bg-white bg-[radial-gradient(#f1f5f9_1px,transparent_1px)] [background-size:24px_24px] dark:bg-[#080d1a]  text-slate-800 transition-colors duration-250 flex flex-col font-sans relative">
       {/* 📁 Global Sticky Hover Categories Floating Action Button */}
       <button
         onClick={() => setSidebarOpen(true)}
@@ -500,12 +567,33 @@ export default function App() {
 
         {/* User parameters wallet profiles information */}
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex flex-col text-right text-xs">
-            <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser.name}</span>
-            <span className="text-[10px] text-slate-400 font-medium font-mono">{currentUser.email}</span>
+          <div className="flex items-center gap-2.5">
+            <div className="hidden md:flex flex-col text-right text-xs">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser.name}</span>
+              <span className="text-[10px] text-slate-400 font-medium font-mono">{currentUser.email}</span>
+            </div>
+            
+            {/* Unified Account Session control action */}
+            {getSavedSession() ? (
+              <button 
+                onClick={handleLogout}
+                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 p-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+                title="Log out of your account"
+              >
+                <LogOut className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline uppercase text-[9px] tracking-wider font-extrabold">Log Out</span>
+              </button>
+            ) : (
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="bg-theme-primary/15 hover:bg-theme-primary/25 text-theme-primary p-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+                title="Access Credentials Login"
+              >
+                <UserIcon className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline uppercase text-[9px] tracking-wider font-extrabold">Log In</span>
+              </button>
+            )}
           </div>
-
-
 
           {/* Dynamic Developer Gateway Panel */}
           {developerAccessGranted ? (
@@ -608,7 +696,7 @@ export default function App() {
       </div>
 
       {/* Main operational workspace */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto relative z-10">
+      <main className="flex-1 p-6 max-w-7xl w-full mx-auto relative">
         
         {/* Dynamic content rendering relative to Tab selections */}
         {activeTab === "home" && (
@@ -996,105 +1084,12 @@ export default function App() {
         </div>
       )}
 
-      {/* 🔒 ACCESS KEY / SECURITY PASSPHRASE AUTHENTICATION MODAL */}
+      {/* 🔒 SECURE MULTI-PROVIDER AUTHENTICATION MODAL */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-          {/* Glass blur overlay */}
-          <div 
-            onClick={() => {
-              setShowAuthModal(false);
-              setAuthError("");
-              setAuthPassword("");
-            }}
-            className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity duration-300"
-          />
-
-          {/* Dialog Card Box */}
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl z-10 space-y-4 animate-slide-up">
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-500/10 text-amber-500 p-2.5 rounded-xl shrink-0">
-                <Shield className="w-5 h-5 text-amber-500 animate-pulse" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-display font-bold text-slate-900 dark:text-slate-50 text-sm leading-none">
-                  Security Lock Gate
-                </h3>
-                <p className="text-[10px] text-slate-400 mt-1 leading-tight">
-                  Enter Password key to unlock developer and admin role preferences.
-                </p>
-              </div>
-              <button 
-                onClick={() => {
-                  setShowAuthModal(false);
-                  setAuthError("");
-                  setAuthPassword("");
-                }}
-                className="p-1 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 text-slate-450 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const pass = authPassword.trim();
-                if (pass === "sayed123" || pass === "admin123") {
-                  setDeveloperAccessGranted(true);
-                  localStorage.setItem("sayed-world-developer-access", "true");
-                  setShowAuthModal(false);
-                  setAuthError("");
-                  setAuthPassword("");
-                  alert("🔑 Access Granted! Admin switcher controls and theme palette customizers are now fully unlocked.");
-                } else if (!pass) {
-                  setAuthError("Please input the passcode!");
-                } else {
-                  setAuthError("Wrong password key code! Try sayed123.");
-                }
-              }}
-              className="space-y-4"
-            >
-              <div className="space-y-1">
-                <label className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase leading-none block">
-                  Store Access Key Passphrase
-                </label>
-                <input
-                  type="password"
-                  placeholder="Enter Password (e.g. sayed123)"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  className="w-full text-xs font-bold font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-white/5 p-3 rounded-xl focus:outline-none focus:ring-1.5 focus:ring-amber-500 focus:border-transparent tracking-widest text-center"
-                  autoFocus
-                />
-                {authError && (
-                  <p className="text-[10.5px] font-bold text-red-500 pt-1 leading-none text-center">
-                    ⚠️ {authError}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAuthModal(false);
-                    setAuthError("");
-                    setAuthPassword("");
-                  }}
-                  className="py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-500 rounded-xl font-bold text-xs transition active:scale-95 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="py-2.5 bg-theme-primary text-white hover:bg-theme-hover rounded-xl font-black text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
-                >
-                  Confirm Key
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AuthModal 
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
       )}
     </div>
   );

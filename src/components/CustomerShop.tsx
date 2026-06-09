@@ -6,7 +6,7 @@ import {
   Search, SlidersHorizontal, ShoppingCart, Plus, Minus, Trash2, 
   X, Check, ChevronRight, Truck, CreditCard, CheckCircle2, Ticket,
   Clock, Flame, Trophy, Coins, Palette, ArrowRight, Shield, Wallet, Percent, Tag, MessageSquare,
-  Shirt, Smartphone, Home, Gift
+  Shirt, Smartphone, Home, Gift, Camera, UploadCloud, Video, RefreshCw
 } from "lucide-react";
 
 interface CustomerShopProps {
@@ -148,12 +148,125 @@ export default function CustomerShop({
   const [selectedZoomImage, setSelectedZoomImage] = useState<string | null>(null);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
 
+  // AI Visual Snap Search states
+  const [visualSearchOpen, setVisualSearchOpen] = useState(false);
+  const [visualSearchLoading, setVisualSearchLoading] = useState(false);
+  const [visualSearchImage, setVisualSearchImage] = useState<string | null>(null);
+  const [visualSearchProductIds, setVisualSearchProductIds] = useState<string[] | null>(null);
+  const [visualSearchOutcome, setVisualSearchOutcome] = useState<{
+    explanation?: string;
+    detectedKeywords?: string;
+    detectedCategory?: string;
+    isFallback?: boolean;
+  } | null>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      setCameraStream(stream);
+    } catch (err) {
+      console.error("Camera access failed", err);
+      alert("❌ Camera access denied or not working. Please use the 'Upload Photo' options instead!");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  const captureImage = (videoElement: HTMLVideoElement | null) => {
+    if (videoElement) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoElement.videoWidth || 640;
+      canvas.height = videoElement.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg");
+        setVisualSearchImage(dataUrl);
+        // Stop stream tracks
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+        }
+        setCameraStream(null);
+      }
+    }
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setVisualSearchImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
+
+  // Play stream when active
+  useEffect(() => {
+    if (cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+      videoRef.current.play().catch(err => console.error(err));
+    }
+  }, [cameraStream]);
+
+  const handleVisualSearchClose = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
+    setCameraStream(null);
+    setVisualSearchOpen(false);
+  };
+
+  const onVisualSearchSubmit = async () => {
+    if (!visualSearchImage) return;
+    setVisualSearchLoading(true);
+    try {
+      const res = await fetch("/api/search-by-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          imageBase64: visualSearchImage,
+          mimeType: "image/jpeg"
+        })
+      });
+      const data = await res.json();
+      if (data.matchedIds && data.matchedIds.length > 0) {
+        setVisualSearchProductIds(data.matchedIds);
+        setVisualSearchOutcome({
+          explanation: data.explanation,
+          detectedKeywords: data.detectedKeywords,
+          detectedCategory: data.detectedCategory,
+          isFallback: data.isFallback
+        });
+        alert(`✨ Photo scanned successfully!\nMatched ${data.matchedIds.length} product(s) in catalog.`);
+        handleVisualSearchClose();
+      } else {
+        alert("🔍 AI couldn't find a direct match. It could be a new product style. Try taking another picture.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Visual search failed. Please verify your connection or fallback offline.");
+    } finally {
+      setVisualSearchLoading(false);
+    }
+  };
+
   // Direct Variant/Size shopping sheet state: maintains quantities of S, M, L, XL added in details panel
   const [variantQuantities, setVariantQuantities] = useState<Record<string, number>>({});
   
   // Variation toggles inside details modal
   const [chosenColor, setChosenColor] = useState("");
   const [chosenSize, setChosenSize] = useState("");
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
   // Countdown clock state
   const [expiryTime, setExpiryTime] = useState({ h: 3, m: 45, s: 12 });
@@ -220,8 +333,28 @@ export default function CustomerShop({
     if (selectedProduct) {
       setChosenColor(selectedProduct.variants?.[0]?.color || "");
       setChosenSize(selectedProduct.variants?.[0]?.size || "");
+      setActiveImageIndex(0);
     }
   }, [selectedProduct]);
+
+  // Set active image when color selection changes
+  useEffect(() => {
+    if (selectedProduct && chosenColor) {
+      let idx = 0;
+      if (chosenColor.toLowerCase().includes("black") && selectedProduct.images[1]) {
+        idx = 1;
+      } else if (chosenColor.toLowerCase().includes("pink") && selectedProduct.images[2]) {
+        idx = 2;
+      } else if (chosenColor.toLowerCase().includes("wine") && selectedProduct.images[3]) {
+        idx = 3;
+      } else if (chosenColor.toLowerCase().includes("brown") && selectedProduct.images[1]) {
+        idx = 1;
+      } else if (chosenColor.toLowerCase().includes("slipper") && selectedProduct.images[2]) {
+        idx = 2;
+      }
+      setActiveImageIndex(idx);
+    }
+  }, [chosenColor, selectedProduct]);
 
   // Pricing math
   const cartSubtotal = cart.reduce((acc, item) => {
@@ -340,8 +473,10 @@ export default function CustomerShop({
     const minVal = minPrice ? parseFloat(minPrice) : 0;
     const maxVal = maxPrice ? parseFloat(maxPrice) : Infinity;
     const matchesPrice = p.price >= minVal && p.price <= maxVal;
+
+    const matchesVisual = !visualSearchProductIds || visualSearchProductIds.includes(p.id);
     
-    return matchesCat && matchesQuery && matchesPrice;
+    return matchesCat && matchesQuery && matchesPrice && matchesVisual;
   });
 
   // Find matching suggest items based on active category (Video 1 Setup)
@@ -408,9 +543,13 @@ export default function CustomerShop({
             />
             {/* Camera Lens Indicator just like Daraz screenshot */}
             <button 
-              onClick={() => alert("📸 Snap & Search activated! Capture your item style to scan in our database.")}
+              onClick={() => {
+                setVisualSearchOpen(true);
+                setVisualSearchOutcome(null);
+                setVisualSearchImage(null);
+              }}
               className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-emerald-500 text-[13px] transition cursor-pointer"
-              title="Snap Search by Image"
+              title="Camera Snap & Photo Search"
             >
               📷
             </button>
@@ -423,6 +562,35 @@ export default function CustomerShop({
           </button>
         </div>
       </div>
+
+      {/* Visual Matching Capsule Alert */}
+      {visualSearchProductIds && (
+        <div className="bg-emerald-500/10 dark:bg-emerald-950/20 border border-emerald-500/20 rounded-xl p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 relative z-10 animate-fade-in text-xs font-semibold text-slate-800 dark:text-slate-150">
+          <div className="flex gap-2.5 items-center">
+            <span className="text-base">📷</span>
+            <div>
+              <p className="font-extrabold text-[#f85606] dark:text-[#f85606]/90">
+                AI Visual Match Active ({visualSearchProductIds.length} found) • ইমেজ ম্যাচ ফলাফল
+              </p>
+              {visualSearchOutcome?.explanation && (
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 max-w-xl">
+                  {visualSearchOutcome.explanation}
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setVisualSearchProductIds(null);
+              setVisualSearchOutcome(null);
+              setVisualSearchImage(null);
+            }}
+            className="text-[10px] uppercase font-black tracking-wider text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-450 hover:text-rose-700 py-1.5 px-3 rounded-lg border border-rose-250 dark:border-rose-900 transition shrink-0 cursor-pointer"
+          >
+            Clear Search • রিসেট করুন
+          </button>
+        </div>
+      )}
 
       {/* 🏷️ Top-Tier Circular Custom Category Grid (Stacked Layout: Icon on Top, Name Below) */}
       <div className="bg-white dark:bg-slate-900 border border-slate-150 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm relative z-10">
@@ -1201,27 +1369,12 @@ export default function CustomerShop({
           ? Array.from(new Set(selectedProduct.variants.filter(v => v.color).map(v => v.color))) 
           : [];
         
-        // Find which image index maps to selected variant color
-        let activeImgIndex = 0;
-        if (chosenColor) {
-          if (chosenColor.toLowerCase().includes("black") && selectedProduct.images[1]) {
-            activeImgIndex = 1;
-          } else if (chosenColor.toLowerCase().includes("pink") && selectedProduct.images[2]) {
-            activeImgIndex = 2;
-          } else if (chosenColor.toLowerCase().includes("wine") && selectedProduct.images[3]) {
-            activeImgIndex = 3;
-          } else if (chosenColor.toLowerCase().includes("brown") && selectedProduct.images[1]) {
-            activeImgIndex = 1;
-          } else if (chosenColor.toLowerCase().includes("slipper") && selectedProduct.images[2]) {
-            activeImgIndex = 2;
-          }
-        }
-        
-        const activeMainImage = selectedProduct.images[activeImgIndex] || selectedProduct.images[0];
+        // Use the synchronized active image index state
+        const activeMainImage = selectedProduct.images[activeImageIndex] || selectedProduct.images[0];
         
         // Count total item units and cost in the interactive sizes table
-        const totalVariantQtySelected = Object.values(variantQuantities).reduce((a, b) => a + b, 0);
-        const calculatedVariantsPriceVal = selectedProduct.price * Math.max(1, totalVariantQtySelected);
+        const totalVariantQtySelected = Object.values(variantQuantities).reduce((a, b) => Number(a) + Number(b), 0);
+        const calculatedVariantsPriceVal = selectedProduct.price * Math.max(1, Number(totalVariantQtySelected));
 
         const handleShareLink = () => {
           const fakeUrl = `https://sayed.world/product/${selectedProduct.id}`;
@@ -1277,13 +1430,16 @@ export default function CustomerShop({
                         return (
                           <div 
                             key={`thumb-${idx}`}
-                            className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-white/5 cursor-pointer group"
+                            className={`relative aspect-square rounded-xl overflow-hidden border cursor-pointer group transition-all duration-200 ${
+                              activeImageIndex === idx 
+                                ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm scale-95" 
+                                : "border-slate-200 dark:border-white/5 hover:border-slate-400"
+                            }`}
                             onClick={() => {
                               if (isVideoThumbnail && selectedProduct.id.includes("shirt")) {
                                 setVideoModalOpen(true);
                               } else {
-                                // Simulate switching
-                                setChosenColor("");
+                                setActiveImageIndex(idx);
                               }
                             }}
                           >
@@ -1458,50 +1614,12 @@ export default function CustomerShop({
                       </div>
                     </div>
 
-                    {/* 🚢 Video 3 style: Priority Shipping Logistics Options */}
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">
-                        Import/Shipping Mode Preference • শিপিং মাধ্যম:
-                      </span>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div
-                          onClick={() => setShippingPreference("air")}
-                          className={`p-3 rounded-2xl border cursor-pointer transition flex items-start gap-2.5 ${
-                            shippingPreference === "air"
-                              ? "bg-emerald-500/5 text-emerald-600 border-emerald-500"
-                              : "bg-slate-50 dark:bg-slate-950/20 text-slate-650 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/5"
-                          }`}
-                        >
-                          <div className="text-lg">✈️</div>
-                          <div className="min-w-0">
-                            <h6 className="font-extrabold text-[11px] leading-tight">Priority Air Cargo</h6>
-                            <span className="text-[9px] text-slate-400 font-bold block mt-0.5">3-5 days • Rec. ৳750/Kg</span>
-                          </div>
-                        </div>
-
-                        <div
-                          onClick={() => setShippingPreference("sea")}
-                          className={`p-3 rounded-2xl border cursor-pointer transition flex items-start gap-2.5 ${
-                            shippingPreference === "sea"
-                              ? "bg-emerald-500/5 text-emerald-600 border-emerald-500"
-                              : "bg-slate-50 dark:bg-slate-950/20 text-slate-650 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/5"
-                          }`}
-                        >
-                          <div className="text-lg">🚢</div>
-                          <div className="min-w-0">
-                            <h6 className="font-extrabold text-[11px] leading-tight">Sea Bulk Saver</h6>
-                            <span className="text-[9px] text-slate-400 font-bold block mt-0.5">14-20 days • Rec. ৳170/Kg</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Specifications Section */}
                     <div className="pt-3 border-t border-slate-100 dark:border-white/5 space-y-2">
                       <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">Specifications:</span>
                       <div className="grid grid-cols-2 gap-2 text-[9px] font-mono">
                         {Object.entries(selectedProduct.specifications).map(([key, val]) => (
-                          <div key={key} className="bg-slate-50 dark:bg-slate-950/50 p-2 rounded-xl border border-slate-200/50 dark:border-white/5">
+                          <div key={key} className="bg-slate-50 dark:bg-slate-950/50 p-2 rounded-xl border border-slate-205 dark:border-white/5">
                             <span className="text-slate-400 block uppercase font-bold">{key}</span>
                             <span className="font-extrabold text-slate-700 dark:text-slate-300 block mt-0.5">{val}</span>
                           </div>
@@ -1518,20 +1636,20 @@ export default function CustomerShop({
                         </span>
                         {selectedProduct.oldPrice && (
                           <span className="text-[10px] text-slate-450 line-through ml-2 font-bold">
-                            ৳{(selectedProduct.oldPrice * Math.max(1, totalVariantQtySelected)).toLocaleString()}
+                            ৳{(selectedProduct.oldPrice * Math.max(1, Number(totalVariantQtySelected))).toLocaleString()}
                           </span>
                         )}
                       </div>
 
                       <button
                         onClick={() => {
-                          const itemsConfigured = Object.entries(variantQuantities).filter(([_, qty]) => qty > 0);
+                          const itemsConfigured = Object.entries(variantQuantities).filter(([_, qty]) => Number(qty) > 0);
                           const activeColorName = chosenColor || (selectedProduct.variants?.[0]?.color) || "Standard Style";
 
                           if (itemsConfigured.length > 0) {
                             // Add each specific size with their quantity
                             itemsConfigured.forEach(([sz, qty]) => {
-                              for (let i = 0; i < qty; i++) {
+                              for (let i = 0; i < Number(qty); i++) {
                                 addToCart(selectedProduct, activeColorName, sz);
                               }
                             });
@@ -1977,6 +2095,168 @@ export default function CustomerShop({
                 Apply
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 📷 Premium Camera Cap & Image Search Modal (Gemini Powered) */}
+      {visualSearchOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-60 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-205 dark:border-white/10 relative flex flex-col max-h-[90vh] animate-fade-in animate-duration-300">
+            
+            {/* Header */}
+            <div className="bg-slate-50 dark:bg-slate-950 p-4 border-b border-slate-150 dark:border-white/5 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📷</span>
+                <div>
+                  <h3 className="font-display font-black text-[13px] text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+                    Snap & Visual AI Search • ইমেজ অনুসন্ধান
+                  </h3>
+                  <p className="text-[10px] text-slate-450 dark:text-slate-400 font-bold">
+                    Upload photo or use camera to find matches with our top catalog
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={handleVisualSearchClose}
+                className="bg-slate-200 hover:bg-slate-355 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white p-2 rounded-full cursor-pointer transition text-xs font-black w-7 h-7 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Main Panel Content */}
+            <div className="p-5 flex-1 overflow-y-auto space-y-4">
+              
+              {/* No Image Captured/Uploaded State */}
+              {!visualSearchImage ? (
+                <div className="space-y-4">
+                  {/* Method Toggle Buttons */}
+                  <div className="grid grid-cols-2 gap-3 pb-2">
+                    <button 
+                      type="button"
+                      onClick={startCamera}
+                      className={`py-3 px-4 rounded-xl flex flex-col items-center justify-center gap-1.5 border transition cursor-pointer ${
+                        cameraStream 
+                          ? "bg-emerald-500/10 border-emerald-500 text-emerald-600" 
+                          : "bg-slate-50 dark:bg-slate-955/20 border-transparent text-slate-650 dark:text-slate-300 hover:border-slate-205"
+                      }`}
+                    >
+                      <Video className="w-5 h-5 text-emerald-500 animate-pulse" />
+                      <span className="text-[11px] font-black uppercase tracking-wider">Use Live Camera</span>
+                    </button>
+
+                    <div className="relative py-3 px-4 rounded-xl flex flex-col items-center justify-center gap-1.5 border border-dashed border-slate-300 dark:border-slate-755 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-950/20 transition cursor-pointer text-slate-650 dark:text-slate-300">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                      />
+                      <UploadCloud className="w-5 h-5 text-indigo-500" />
+                      <span className="text-[11px] font-black uppercase tracking-wider">Upload Local Photo</span>
+                    </div>
+                  </div>
+
+                  {/* Active Camera Viewfinder Area */}
+                  {cameraStream ? (
+                    <div className="relative rounded-2xl overflow-hidden bg-black aspect-video border border-slate-800 shadow-inner">
+                      <video 
+                        ref={videoRef}
+                        className="w-full h-full object-cover scale-x-[-1]"
+                        autoPlay 
+                        playsInline 
+                        muted
+                      />
+                      <div className="absolute inset-0 border-2 border-emerald-500/30 rounded-2xl pointer-events-none flex items-center justify-center">
+                        {/* Sighting overlay */}
+                        <div className="w-48 h-48 border border-white/40 border-dashed rounded-lg flex items-center justify-center">
+                          <span className="text-[9px] text-white/50 uppercase font-mono bg-black/65 px-2 py-0.5 rounded">Align Item</span>
+                        </div>
+                      </div>
+
+                      {/* Snap Button inside Viewfinder */}
+                      <div className="absolute bottom-4 inset-x-0 flex justify-center">
+                        <button
+                          onClick={() => captureImage(videoRef.current)}
+                          className="bg-emerald-600 hover:bg-emerald-700 hover:scale-105 active:scale-95 text-white font-extrabold px-5 py-2.5 rounded-full text-xs uppercase flex items-center gap-2 shadow-2xl transition cursor-pointer"
+                        >
+                          <Camera className="w-4 h-4" />
+                          Capture Item • ফটো তুলুন
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Drag & Drop File Selector area */
+                    <div className="border border-dashed border-slate-300 dark:border-white/10 rounded-2xl p-6 text-center hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition relative group">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                      />
+                      <UploadCloud className="w-8 h-8 text-slate-400 mx-auto group-hover:scale-110 transition duration-300 animate-bounce" />
+                      <p className="text-xs text-slate-700 dark:text-slate-300 font-extrabold mt-2 uppercase tracking-wide">
+                        Drag and Drop or Browse File
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                        Supports PNG, JPG, JPEG capture from other devices
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Captured Preview Analysis Panel */
+                <div className="space-y-4">
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block text-center">
+                    Analysis Preview • আপনার অবজেক্ট
+                  </span>
+                  <div className="relative rounded-2xl overflow-hidden max-h-64 border border-slate-202 dark:border-white/10 shadow-md">
+                    <img 
+                      src={visualSearchImage} 
+                      alt="Captured shopping search" 
+                      className="w-full h-full object-contain bg-slate-50 dark:bg-slate-955 max-h-60"
+                      referrerPolicy="no-referrer"
+                    />
+                    <button
+                      onClick={() => {
+                        setVisualSearchImage(null);
+                        setVisualSearchOutcome(null);
+                      }}
+                      className="absolute top-2 right-2 bg-slate-900/85 hover:bg-black/90 text-white font-black text-[10px] px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Retake / Upload Other
+                    </button>
+                  </div>
+
+                  {visualSearchLoading ? (
+                    <div className="bg-slate-50 dark:bg-slate-950/50 p-6 rounded-2xl text-center space-y-3 border border-slate-100 dark:border-white/5 font-semibold">
+                      <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto border-t-emerald-400" />
+                      <p className="text-xs text-[#f85606] font-black uppercase tracking-wider animate-pulse">
+                        Sayed-Visual Engine Analyzing with Gemini AI...
+                      </p>
+                      <p className="text-[10px] text-slate-450 dark:text-slate-400 font-medium">
+                        Comparing texture, colors, and styling details against our premium active stocks
+                      </p>
+                    </div>
+                  ) : (
+                    /* CTA Submit visual request */
+                    <div className="pt-2">
+                      <button
+                        onClick={onVisualSearchSubmit}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-black py-3 rounded-xl transition cursor-pointer uppercase text-xs tracking-wider shadow-lg flex items-center justify-center gap-2 "
+                      >
+                        <Sparkles className="w-4 h-4 animate-bounce" />
+                        Compare & Match with Catalog • এআই সার্চ করুন
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+            
           </div>
         </div>
       )}
