@@ -57,6 +57,79 @@ export const VENDOR_STORES: VendorStore[] = [
 
 export const PRODUCTS: Product[] = [
   {
+    id: "prod-shirt-skybuy",
+    vendorStoreId: "store-2",
+    title: "Short-sleeved White Shirt Men's Summer Business Casual Non-ironing Anti-wrinkle Slim-fit Half-sleeved Blue and Black Shirt",
+    slug: "summer-business-casual-shirt",
+    description: "Premium cotton business casual shirt designed with state of the art non-ironing and anti-wrinkle treatment. Features lightweight breathable composition, soft feel texture, and executive slim cut styling perfect for standard office and dynamic social meetups in Bangladesh.",
+    price: 566,
+    oldPrice: 850,
+    images: [
+      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop&q=80", // Sky Blue
+      "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80", // Black
+      "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&auto=format&fit=crop&q=80", // Pink
+      "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&auto=format&fit=crop&q=80"  // Wine Red
+    ],
+    categoryId: "cat-1",
+    brandId: "brand-1",
+    rating: 4.8,
+    stockCount: 150,
+    salesCount: 7200,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Fabric Material": "65% Silk Modal, 35% Premium combed Cotton",
+      "Treatments": "Anti-wrinkle, Easy Non-ironing wash",
+      "Collar Design": "Classic Spread Executive Collar",
+      "Fit Type": "Modern Slim-Fit"
+    },
+    variants: [
+      { id: "v-shirt-s", size: "S", color: "Short Sleeve Shirt Sky Blue", stock: 30, additionalPrice: 0 },
+      { id: "v-shirt-m", size: "M", color: "Short Sleeve Shirt Sky Blue", stock: 40, additionalPrice: 0 },
+      { id: "v-shirt-l", size: "L", color: "Short Sleeve Shirt Sky Blue", stock: 25, additionalPrice: 0 },
+      { id: "v-shirt-xl", size: "XL", color: "Short Sleeve Shirt Sky Blue", stock: 15, additionalPrice: 0 },
+      { id: "v-shirt-black", size: "M", color: "Short-Sleeved Shirt Black", stock: 20, additionalPrice: 0 },
+      { id: "v-shirt-pink", size: "L", color: "Short Sleeve Shirt Pink", stock: 10, additionalPrice: 0 },
+      { id: "v-shirt-wine", size: "XL", color: "Short Sleeve Shirt Wine Red", stock: 10, additionalPrice: 0 }
+    ]
+  },
+  {
+    id: "prod-derby-skybuy",
+    vendorStoreId: "store-2",
+    title: "Black Brown Square-Toe Leather Shoes Old Money Style Unisex Niche Retro Formal Commuting Derby Shoes Direct Sale",
+    slug: "retro-niche-derby-shoes",
+    description: "Premium micro-leather square-toe derby dress shoes conveying the authentic elegant 'Old Money style' retro vibes. Features shock-absorbent comfort insoles, reinforced anti-slip soles, and versatile aesthetic commuting wearability.",
+    price: 4417,
+    oldPrice: 5800,
+    images: [
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&auto=format&fit=crop&q=80", // Black
+      "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=600&auto=format&fit=crop&q=80", // Brown
+      "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop&q=80"  // Slipper/Niche
+    ],
+    categoryId: "cat-1",
+    brandId: "brand-1",
+    rating: 4.9,
+    stockCount: 88,
+    salesCount: 1400,
+    status: "approved",
+    featured: true,
+    specifications: {
+      "Vamp Outer Material": "High-Grade Vegan Leather Commute Texture",
+      "Heel Height": "Increases height by up to 7cm via stealth insole",
+      "Stitching": "Premium Handmade double-layer welt outline",
+      "Sole Material": "Durable Anti-slip Vulcanized Rubber"
+    },
+    variants: [
+      { id: "v-shoe-37", size: "37", color: "Black", stock: 12, additionalPrice: 0 },
+      { id: "v-shoe-38", size: "38", color: "Black", stock: 15, additionalPrice: 0 },
+      { id: "v-shoe-39", size: "39", color: "Black", stock: 20, additionalPrice: 0 },
+      { id: "v-shoe-40", size: "40", color: "Black", stock: 11, additionalPrice: 0 },
+      { id: "v-shoe-41", size: "41", color: "Black", stock: 10, additionalPrice: 0 },
+      { id: "v-shoe-37b", size: "37", color: "Brown", stock: 8, additionalPrice: 0 },
+      { id: "v-shoe-38b", size: "38", color: "Brown", stock: 12, additionalPrice: 0 }
+    ]
+  },
+  {
     id: "prod-1",
     vendorStoreId: "store-1",
     title: "Sayed-Watch X Premium Smartwatch",
