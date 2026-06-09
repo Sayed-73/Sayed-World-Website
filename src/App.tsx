@@ -335,7 +335,7 @@ export default function App() {
 
     // <div className="min-h-screen bg-slate-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] dark:bg-[#080d1a] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] text-slate-800 dark:text-slate-200 transition-colors duration-250 flex flex-col font-sans relative">
     // background color change
-      <div className="min-h-screen bg-white bg-[radial-gradient(#f1f5f9_1px,transparent_1px)] [background-size:24px_24px] dark:bg-[#080d1a]  text-slate-800 transition-colors duration-250 flex flex-col font-sans relative">
+      <div className="min-h-screen bg-white bg-[radial-gradient(#f1f5f9_1px,transparent_1px)] [background-size:24px_24px] dark:bg-[#8e8e97]  text-slate-800 transition-colors duration-250 flex flex-col font-sans relative">
       {/* 📁 Global Sticky Hover Categories Floating Action Button */}
       <button
         onClick={() => setSidebarOpen(true)}
